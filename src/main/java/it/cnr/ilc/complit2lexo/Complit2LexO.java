@@ -89,6 +89,7 @@ public class Complit2LexO {
     public static void processConll() throws Exception {
 
         Map<String, LexicalEntry> lexicalEntries = new HashMap<>();
+        Map<String, String> usemId2LexOId = new HashMap<>();
 
         try {
             Scanner scanner = new Scanner(new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/test-importer.conll"));
@@ -135,7 +136,7 @@ public class Complit2LexO {
             scanner.close();
 //            ObjectMapper mapper = new ObjectMapper();
             for (Map.Entry<String, LexicalEntry> entry : lexicalEntries.entrySet()) {
-                String key = entry.getKey();
+                //String key = entry.getKey();
                 LexicalEntry le = entry.getValue();
                 if (le.getLexicoUnits() != null && le.getLexicoUnits().get(Utils.USEM) != null) {
                         for (AbstractLexicoUnit semUnit : le.getLexicoUnits().get(Utils.USEM)) {
