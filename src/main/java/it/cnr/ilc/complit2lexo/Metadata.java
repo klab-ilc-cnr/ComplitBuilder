@@ -10,7 +10,7 @@ package it.cnr.ilc.complit2lexo;
  */
 public abstract class Metadata {
     
-    //String lexo_id; //id generato dai metodi di creazione invocati su LexO
+    String lexo_id; //id generato dai metodi di creazione invocati su LexO
     
     //data creazione = timestamp
     String creation;

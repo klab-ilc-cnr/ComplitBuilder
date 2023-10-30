@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import org.slf4j.Logger;
@@ -117,13 +118,14 @@ public class Complit2LexO {
                             newForm.setRepresentation(cr.getForma());
                             newForm.setTraits(cr.getTraitsList());
                             //metto la PHU nella phoneticRepresentation per non perdere il link tra forma scritta e PHU
-                            if (cr.getLexicoUnits() != null && cr.getLexicoUnits(Utils.PHU) != null ) {
+                            if (cr.getLexicoUnits() != null && cr.getLexicoUnits(Utils.PHU) != null) {
                                 newForm.setPhoneticRep(cr.getLexicoUnits(Utils.PHU).get(0).getId()); //assunzione: per ogni forma esiste una sola phu
                             }
                             le.addForm(newForm);
                         }
                     }
                     le.addLexicoUnits(cr.getLexicoUnits());
+                    
                 } catch (MalformedRowException e) {
                     System.exit(-1);
                 }
@@ -134,9 +136,18 @@ public class Complit2LexO {
 //            ObjectMapper mapper = new ObjectMapper();
             for (Map.Entry<String, LexicalEntry> entry : lexicalEntries.entrySet()) {
                 String key = entry.getKey();
-                LexicalEntry value = entry.getValue();
+                LexicalEntry le = entry.getValue();
+                if (le.getLexicoUnits() != null && le.getLexicoUnits().get(Utils.USEM) != null) {
+                        for (AbstractLexicoUnit semUnit : le.getLexicoUnits().get(Utils.USEM)) {
+                            String idUsem = ((SemanticUnit) semUnit).getId();
+                            List<UsemRel> rels = SQLConnection.getRelByUsem(idUsem);
+                            if (rels != null) {
+                                logger.info(rels.toString());
+                            }
+                        }
+                    }
 //                logger.info(mapper.writeValueAsString(value));
-                logger.info(value.toString());
+                //logger.info(le.toString());
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();

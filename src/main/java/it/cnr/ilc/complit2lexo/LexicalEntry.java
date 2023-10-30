@@ -59,6 +59,46 @@ public class LexicalEntry extends Metadata {
 
     }
 
+    public Map<String, List<AbstractLexicoUnit>> getLexicoUnits() {
+        return lexicoUnits;
+    }
+
+    public void setLexicoUnits(Map<String, List<AbstractLexicoUnit>> lexicoUnits) {
+        this.lexicoUnits = lexicoUnits;
+    }
+
+    public String getLexo_id() {
+        return lexo_id;
+    }
+
+    public void setLexo_id(String lexo_id) {
+        this.lexo_id = lexo_id;
+    }
+
+    public String getCreation() {
+        return creation;
+    }
+
+    public void setCreation(String creation) {
+        this.creation = creation;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(String lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
     public String getStatus() {
         return status;
     }
