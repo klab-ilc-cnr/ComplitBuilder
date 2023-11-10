@@ -18,9 +18,9 @@ import org.slf4j.LoggerFactory;
  */
 @ToString
 public class ConllRow {
-
+    
     private static Logger logger = LoggerFactory.getLogger(Complit2LexO.class);
-
+    
     private String id; //0
     private String forma;//1
     private String lemma;//2
@@ -32,54 +32,61 @@ public class ConllRow {
     public String getId() {
         return id;
     }
-
+    
     public void setId(String id) {
         this.id = id;
     }
-
+    
     public String getForma() {
         return forma;
     }
-
+    
     public void setForma(String forma) {
         this.forma = forma;
     }
-
+    
     public String getLemma() {
         return lemma;
     }
-
+    
     public void setLemma(String lemma) {
         this.lemma = lemma;
     }
-
+    
     public String getPos() {
         return pos;
     }
-
+    
     public void setPos(String pos) {
-        this.pos = pos;
+        if (pos != null) {
+            //pos=lexinfo:partOfSpeech=lexinfo:adjective
+            try {
+                this.pos = pos.split("=")[1].split(":")[1];
+            } catch (NullPointerException e) {
+                logger.error("Error reading pos: " + pos);
+            }
+        }
     }
-
+    
     public String getXpos() {
         return xpos;
     }
-
+    
     public void setXpos(String xpos) {
         this.xpos = xpos;
     }
-
+    
     public Map<String, List<AbstractLexicoUnit>> getLexicoUnits() {
         return lexicoUnits;
     }
     
-    public  List<AbstractLexicoUnit> getLexicoUnits(String type){
-        if(type != null) {
+    public List<AbstractLexicoUnit> getLexicoUnits(String type) {
+        if (type != null) {
             return lexicoUnits.get(type);
         }
         return null;
     }
-
+    
     private void addTrais(String traits) throws Exception {
         if (traits != null) {
             if (this.traitsList == null) {
@@ -92,15 +99,15 @@ public class ConllRow {
             }
         }
     }
-
+    
     public List<Trait> getTraitsList() {
         return traitsList;
     }
-
+    
     private void readMisc(String field) throws Exception {
         if (field != null) {
             if (!field.contains("_")) {
-                if (lexicoUnits == null)  {
+                if (lexicoUnits == null) {
                     lexicoUnits = new HashMap<>();
                 }
                 for (String trait : field.split("\\|")) {
@@ -118,9 +125,9 @@ public class ConllRow {
                 }
             }
         }
-
-   }
-
+        
+    }
+    
     public ConllRow(String row) throws Exception {
         if (row != null) {
             String[] fields = row.split("\t");
@@ -137,5 +144,5 @@ public class ConllRow {
             this.readMisc(fields[9]);
         }
     }
-
+    
 }

@@ -4,8 +4,6 @@
  */
 package it.cnr.ilc.complit2lexo;
 
-import com.fasterxml.jackson.annotation.JsonKey;
-import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.ToString;
 
 /**
@@ -16,11 +14,24 @@ import lombok.ToString;
 public class Trait {
 
     //coppia chiave-valore per un tratto
-    @JsonKey
-    String name;
-    
-    @JsonValue
-    String value;
+    private String name;
+    private String value;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
 
     public Trait() {
     }
@@ -28,8 +39,13 @@ public class Trait {
     public Trait(String conllTrait) throws Exception {
         if ((conllTrait != null) && (conllTrait.contains("="))) {
             String[] t = conllTrait.split("=");
-            this.name = t[0];
-            this.value = t[1];
+            this.name = t[0].split(":")[1];
+            this.value = t[1].split(":")[1];
+            //workaround per i verbFormMood
+            
+            if(this.name.equals("mood")) {//&& !this.value.matches("(imperative|indicative|subjuctive)")) {
+                this.name = "verbFormMood";
+            }
         } else {
             throw new MalformedRowException("This is NOT conll trait: " + conllTrait);
         }

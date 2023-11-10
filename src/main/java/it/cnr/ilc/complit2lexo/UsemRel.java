@@ -16,6 +16,8 @@ public class UsemRel {
     private String idUsem;
     private String relation;
     private String idUsemTarget;
+    private String weigthing;
+    private String template;
 
     public UsemRel() {
     }

@@ -9,7 +9,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 /**
  *
@@ -25,11 +29,12 @@ public class LexOConnection {
 
     private static final String POST_PARAMS = "userName=Pankaj";
 
-    public static void main(String[] args) throws IOException {
-        sendGET();
+    public static void main(String[] args) throws Exception {
+        /*sendGET();
         System.out.println("GET DONE");
         sendPOST();
-        System.out.println("POST DONE");
+        System.out.println("POST DONE");*/
+        get();
     }
 
     public  static void createEmptyLexicalEntry(){
@@ -96,5 +101,19 @@ public class LexOConnection {
         } else {
             System.out.println("POST request did not work.");
         }
+    }
+    
+    
+    private static void get() throws IOException, InterruptedException {
+        
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(GET_URL).create("http://webcode.me"))
+                .build();
+
+        HttpResponse<String> response = client.send(request,
+                HttpResponse.BodyHandlers.ofString());
+
+        System.out.println(response.body());
     }
 }
