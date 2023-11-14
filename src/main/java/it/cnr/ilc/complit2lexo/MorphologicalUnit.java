@@ -9,7 +9,7 @@ import lombok.ToString;
  * @author Simone Marchi
  */
 @ToString
-public class MorphologicalUnit extends AbstractLexicoUnit {
+public class MorphologicalUnit extends AbstractMiscUnit {
 
     //idMus, naming, pos, ginp
     private String id;

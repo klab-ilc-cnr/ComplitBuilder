@@ -11,7 +11,7 @@ import lombok.ToString;
  * @author Simone Marchi
  */
 @ToString
-public class SyntacticUnit extends AbstractLexicoUnit {
+public class SyntacticUnit extends AbstractMiscUnit {
 
     private String id;
 

@@ -44,7 +44,7 @@ public class LexicalEntry extends Metadata {
     private List<LexicalSense> senses;
 
     //Lexico Unit IDS
-    private Map<String, List<AbstractLexicoUnit>> lexicoUnits;
+    private Map<String, List<AbstractMiscUnit>> lexicoUnits;
 
     //denotes
     //evokes
@@ -53,50 +53,18 @@ public class LexicalEntry extends Metadata {
     //otherForm
     public LexicalEntry() {
 
-        super.creation = "";
-        super.creator = "importer";
-        super.lastUpdate = "";
+        super.setCreation("");
+        super.setCreator("importer");
+        super.setLastUpdate("");
 
     }
 
-    public Map<String, List<AbstractLexicoUnit>> getLexicoUnits() {
+    public Map<String, List<AbstractMiscUnit>> getLexicoUnits() {
         return lexicoUnits;
     }
 
-    public void setLexicoUnits(Map<String, List<AbstractLexicoUnit>> lexicoUnits) {
+    public void setLexicoUnits(Map<String, List<AbstractMiscUnit>> lexicoUnits) {
         this.lexicoUnits = lexicoUnits;
-    }
-
-    public String getLexo_id() {
-        return lexo_id;
-    }
-
-    public void setLexo_id(String lexo_id) {
-        this.lexo_id = lexo_id;
-    }
-
-    public String getCreation() {
-        return creation;
-    }
-
-    public void setCreation(String creation) {
-        this.creation = creation;
-    }
-
-    public String getCreator() {
-        return creator;
-    }
-
-    public void setCreator(String creator) {
-        this.creator = creator;
-    }
-
-    public String getLastUpdate() {
-        return lastUpdate;
-    }
-
-    public void setLastUpdate(String lastUpdate) {
-        this.lastUpdate = lastUpdate;
     }
 
     public String getStatus() {
@@ -192,7 +160,7 @@ public class LexicalEntry extends Metadata {
         return false;
     }
 
-    public void addLexicoUnits(Map<String, List<AbstractLexicoUnit>> units) {
+    public void addLexicoUnits(Map<String, List<AbstractMiscUnit>> units) {
 
         if (units != null) {
             for (String key : units.keySet()) {
@@ -202,7 +170,7 @@ public class LexicalEntry extends Metadata {
                 if (!lexicoUnits.containsKey(key)) {
                     lexicoUnits.put(key, units.get(key));
                 } else {
-                    for (AbstractLexicoUnit value : units.get(key)) {
+                    for (AbstractMiscUnit value : units.get(key)) {
                         if (!lexicoUnits.get(key).contains(value)) {
                             lexicoUnits.get(key).add(value);
                         }

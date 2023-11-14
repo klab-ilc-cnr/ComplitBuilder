@@ -18,45 +18,50 @@ import org.slf4j.LoggerFactory;
  */
 @ToString
 public class ConllRow {
-    
+
     private static Logger logger = LoggerFactory.getLogger(Complit2LexO.class);
-    
+
     private String id; //0
     private String forma;//1
     private String lemma;//2
     private String pos;//3
     private String xpos;//4
     private List<Trait> traitsList;//5
-    private Map<String, List<AbstractLexicoUnit>> lexicoUnits;//9
+    private Map<String, List<AbstractMiscUnit>> miscUnits;//9 MISC field
+    private String musId;
+
+    public String getMusId() {
+        return musId;
+    }
 
     public String getId() {
         return id;
     }
-    
+
     public void setId(String id) {
         this.id = id;
     }
-    
+
     public String getForma() {
         return forma;
     }
-    
+
     public void setForma(String forma) {
         this.forma = forma;
     }
-    
+
     public String getLemma() {
         return lemma;
     }
-    
+
     public void setLemma(String lemma) {
         this.lemma = lemma;
     }
-    
+
     public String getPos() {
         return pos;
     }
-    
+
     public void setPos(String pos) {
         if (pos != null) {
             //pos=lexinfo:partOfSpeech=lexinfo:adjective
@@ -67,26 +72,26 @@ public class ConllRow {
             }
         }
     }
-    
+
     public String getXpos() {
         return xpos;
     }
-    
+
     public void setXpos(String xpos) {
         this.xpos = xpos;
     }
-    
-    public Map<String, List<AbstractLexicoUnit>> getLexicoUnits() {
-        return lexicoUnits;
+
+    public Map<String, List<AbstractMiscUnit>> getMiscUnits() {
+        return miscUnits;
     }
-    
-    public List<AbstractLexicoUnit> getLexicoUnits(String type) {
+
+    public List<AbstractMiscUnit> getMiscUnits(String type) {
         if (type != null) {
-            return lexicoUnits.get(type);
+            return miscUnits.get(type);
         }
         return null;
     }
-    
+
     private void addTrais(String traits) throws Exception {
         if (traits != null) {
             if (this.traitsList == null) {
@@ -99,35 +104,47 @@ public class ConllRow {
             }
         }
     }
-    
+
     public List<Trait> getTraitsList() {
         return traitsList;
     }
-    
+
     private void readMisc(String field) throws Exception {
         if (field != null) {
-            if (!field.contains("_")) {
-                if (lexicoUnits == null) {
-                    lexicoUnits = new HashMap<>();
+            if (!field.contains("_")) { //se MISC non e' vuoto
+                if (miscUnits == null) {
+                    miscUnits = new HashMap<>();
                 }
+                /* Esempio
+                phu=PHUabbagli|mus=MUSabbagliareVERB|usyn=SYNUabbagliareV,SYNUabbagliareV2,SYNUabbagliareV3
+                |usem=USem63007abbagliare,USem63008abbagliare,USem68024abbagliare,USem79709abbagliare,USem79710abbagliare
+                 */
                 for (String trait : field.split("\\|")) {
                     String[] couple = trait.split("=");
                     String type = couple[0];
                     String ids = couple[1];
-                    if (!lexicoUnits.containsKey(type)) {
-                        lexicoUnits.put(type, new ArrayList<>());
+                    if (!miscUnits.containsKey(type)) {
+                        miscUnits.put(type, new ArrayList<>());
                     }
                     for (String _id : ids.split(",")) {
-                        AbstractLexicoUnit am = LexicoUnitFactory.createUnit(type, _id);
-                        lexicoUnits.get(type).add(am);
+                        AbstractMiscUnit am = LexicoUnitFactory.createUnit(type, _id);
+                        miscUnits.get(type).add(am);
                     }
 //                    this.traitsList.add(new Trait(trait));
                 }
+
             }
         }
-        
+
     }
-    
+
+    private void calculateId() {
+        //se c'è la MUS => la metto come id della lexical entry
+        if (miscUnits != null && miscUnits.get(Utils.MUS) != null) {
+            this.musId = miscUnits.get(Utils.MUS).get(0).getId(); //se c'è è una sola
+        }
+    }
+
     public ConllRow(String row) throws Exception {
         if (row != null) {
             String[] fields = row.split("\t");
@@ -142,7 +159,8 @@ public class ConllRow {
                 throw new MalformedRowException(e);
             }
             this.readMisc(fields[9]);
+            calculateId();
         }
     }
-    
+
 }

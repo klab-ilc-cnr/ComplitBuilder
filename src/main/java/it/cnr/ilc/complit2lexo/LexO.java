@@ -30,6 +30,7 @@ public class LexO {
     private static HttpClient client = null;
 
     private static final String baseurl = "http://licodemo.ilc.cnr.it:8080/LexO-backend-simone_test/service/";
+    //private static final String baseurl = "http://localhost:8080/LexO-backend-simone_test/service/";
     private static final String author = "author=importer";
     private static final String prefix = "prefix=lex";
     private static final String baseIRI = "baseIRI=http%3A%2F%2Flexica%2Fmylexicon%23";
@@ -183,7 +184,7 @@ public class LexO {
         logger.debug("GET response: " + response.body());
         Instant finish = Instant.now();
         long timeElapsed = Duration.between(start, finish).toMillis();
-        logger.warn("GET Execution time: {}", timeElapsed);
+        logger.warn("GET Execution time: {}ms", timeElapsed);
         return response;
     }
 
@@ -213,7 +214,7 @@ public class LexO {
         logger.debug("response: " + response.body());
         Instant finish = Instant.now();
         long timeElapsed = Duration.between(start, finish).toMillis();
-        logger.warn("POST Execution time: {}", timeElapsed);
+        logger.warn("POST Execution time: {}ms", timeElapsed);
         return response;
     }
 

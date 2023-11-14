@@ -11,7 +11,7 @@ import lombok.ToString;
  * @author Simone Marchi
  */
 @ToString
-public class PhonologicalUnit extends AbstractLexicoUnit{
+public class PhonologicalUnit extends AbstractMiscUnit{
 
     private String id;
 

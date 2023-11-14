@@ -9,14 +9,47 @@ package it.cnr.ilc.complit2lexo;
  * @author Simone Marchi
  */
 public abstract class Metadata {
-    
-    String lexo_id; //id generato dai metodi di creazione invocati su LexO
-    
+
+    private  String id; //id generato dai metodi di creazione invocati su LexO
+
     //data creazione = timestamp
-    String creation;
+    private String creation;
     //creator = "bot"
-    String creator;
+    private String creator;
     //last update = timestamp
-    String lastUpdate;
+    private String lastUpdate;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getCreation() {
+        return creation;
+    }
+
+    public void setCreation(String creation) {
+        this.creation = creation;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(String lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
     
 }

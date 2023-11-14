@@ -8,7 +8,7 @@ package it.cnr.ilc.complit2lexo;
  *
  * @author Simone Marchi
  */
-public abstract class AbstractLexicoUnit {
+public abstract class AbstractMiscUnit {
 
     public abstract String getId();
 

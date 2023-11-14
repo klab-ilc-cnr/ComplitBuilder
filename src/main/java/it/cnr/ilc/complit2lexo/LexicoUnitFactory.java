@@ -10,7 +10,7 @@ package it.cnr.ilc.complit2lexo;
  */
 public class LexicoUnitFactory {
     
-    public static AbstractLexicoUnit createUnit(String type, String id) throws Exception {
+    public static AbstractMiscUnit createUnit(String type, String id) throws Exception {
         if(type!=null) {
 		if(Utils.MUS.equalsIgnoreCase(type)) return new MorphologicalUnit(id);
 		else if(Utils.PHU.equalsIgnoreCase(type)) return new PhonologicalUnit(id);
