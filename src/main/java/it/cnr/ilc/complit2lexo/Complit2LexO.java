@@ -86,8 +86,9 @@ public class Complit2LexO {
             for (Map.Entry<String, LexicalEntry> entry : lexicalEntries.get(next).entrySet()) {
                 String key = entry.getKey();
                 LexicalEntry value = entry.getValue();
-               // writer.write(String.format("key: %s, Value: %s\n", key, value.toString()));
+                // writer.write(String.format("key: %s, Value: %s\n", key, value.toString()));
                 writer.write(String.format("%s\n", value.toString()));
+                printPotentialVariants(value);
             }
         }
         writer.close();
@@ -194,7 +195,7 @@ public class Complit2LexO {
                             form.appendProvenance(cr.getId());
                             le.addLexicoUnits(cr.getMiscUnits());
                         }
-                    } 
+                    }
                 }
 
             } catch (MalformedRowException e) {
@@ -329,6 +330,28 @@ public class Complit2LexO {
                     }
                 }
             }
+        }
+    }
+
+    private static void printPotentialVariants(LexicalEntry value) {
+        List<Form> forms = value.getForms();
+        
+        if (forms != null) {
+            if (forms.size() >= 2) {
+                String id = value.getId();
+                for (int i = 0; i < forms.size(); i++) {
+                    Form a = forms.get(i);
+                    for (int j = i + 1; j < forms.size(); j++) {
+                        Form b = forms.get(j);
+                        if (a.getTraits().containsAll(b.getTraits())
+                                || b.getTraits().containsAll(a.getTraits())) {
+                            //sono uguali
+                            System.err.format("%s\n%s%s\n", id, a, b);
+                        }
+                    }
+                }
+            }
+
         }
     }
 }
