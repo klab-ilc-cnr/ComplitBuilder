@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,24 +18,29 @@ import org.slf4j.LoggerFactory;
  *
  * @author Simone Marchi
  */
-@ToString
+@ToString(callSuper = true)
 public class LexicalEntry extends Metadata {
 
     private static Logger logger = LoggerFactory.getLogger(LexicalEntry.class);
-
+    @ToString.Exclude
     private String status; //working, completato, revisionato
 
     private String label;// es. andare
+
+    @ToString.Exclude
     private String language; //es. it
 
+    @ToString.Exclude
     private String type = "http://www.w3.org/ns/lemon/ontolex#Word";
     //http://www.w3.org/ns/lemon/ontolex#MultiwordExpression nel caso di multiword
 
     private String pos; //es. "http://www.lexinfo.net/ontology/3.0/lexinfo#" + POS dal merge
     //Lemma
 
+    @ToString.Exclude
     private String author; //in fase di creazione coincide con il creatore
 
+    @ToString.Exclude
     private Form canonicalForm; //lemma
 
     /* The 'lexical form' property relates a lexical entry to 
@@ -57,6 +64,17 @@ public class LexicalEntry extends Metadata {
         super.setCreator("importer");
         super.setLastUpdate("");
 
+    }
+
+    public LexicalEntry(String id, String label, String language, String pos) {
+        super.setCreation("");
+        super.setCreator("importer");
+        super.setLastUpdate("");
+
+        super.setId(id);
+        this.label = label;
+        this.language = language;
+        this.pos = pos;
     }
 
     public Map<String, List<AbstractMiscUnit>> getLexicoUnits() {
@@ -142,22 +160,36 @@ public class LexicalEntry extends Metadata {
         this.senses = senses;
     }
 
-    public boolean containsForma(String forma, List<Trait> traits) {
+    public Form searchForma(ConllRow row) {
+        Form ret = null;
+        if (row != null) {
+            String forma = row.getForma();
+            List<Trait> traits = row.getTraitsList();
 
-        if (getForms() != null) {
-            for (Form form : getForms()) {
-                if (form.getRepresentation().equals(forma)) {
-                    //compare trais
-                    if (form.getTraits().containsAll(traits)) {
-
-                        logger.warn("Entry already exists: {} {}", forma, traits.toString());
-                        return true;
+            List<AbstractMiscUnit> phus = row.getMiscUnits(Utils.PHU);
+            String phuId = null;
+            if (phus != null) {
+                phuId = ((PhonologicalUnit) phus.get(0)).getId(); //la phu se esiste è unica per ogni riga del conll
+            }
+            if (getForms() != null) {
+                for (Form form : getForms()) {
+                    if (form.getRepresentation().equals(forma)) {
+                        //compare traits
+                        if (form.getTraits().containsAll(traits) || traits.containsAll(form.getTraits())) {
+                            List<Trait> broaderTraits = form.getTraits().containsAll(traits) ? form.getTraits() : traits;
+                            if (phuId != null && form.getPhoneticRep() != null && phuId.equals(form.getPhoneticRep())) {
+                                logger.warn("Entry already exists: {} {}", forma, broaderTraits);
+                                return form;
+                            } else if (phuId == null || form.getPhoneticRep() == null) {
+                                return form;
+                            }
+                        }
                     }
                 }
             }
+            logger.debug("Not found: {} {}", forma, traits.toString());
         }
-        logger.debug("Not found: {} {}", forma, traits.toString());
-        return false;
+        return ret;
     }
 
     public void addLexicoUnits(Map<String, List<AbstractMiscUnit>> units) {
@@ -165,7 +197,7 @@ public class LexicalEntry extends Metadata {
         if (units != null) {
             for (String key : units.keySet()) {
                 if (lexicoUnits == null) {
-                    lexicoUnits = new  HashMap<>();
+                    lexicoUnits = new HashMap<>();
                 }
                 if (!lexicoUnits.containsKey(key)) {
                     lexicoUnits.put(key, units.get(key));
@@ -181,4 +213,14 @@ public class LexicalEntry extends Metadata {
         }
     }
 
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
+                .append("label", this.label)
+                .append("pos", this.pos)
+                .append("id", this.getId())
+                .append("\n")
+                .appendToString((this.getForms()!=null)?this.getForms().toString():"AAAAAAAHHHHHHHHH")
+                .toString();
+    }
 }

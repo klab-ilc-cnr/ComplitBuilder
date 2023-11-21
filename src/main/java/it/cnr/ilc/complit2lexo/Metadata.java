@@ -4,12 +4,16 @@
  */
 package it.cnr.ilc.complit2lexo;
 
+import lombok.ToString;
+
 /**
  *
  * @author Simone Marchi
  */
+@ToString(onlyExplicitlyIncluded = true, includeFieldNames = false)
 public abstract class Metadata {
 
+    @ToString.Include
     private  String id; //id generato dai metodi di creazione invocati su LexO
 
     //data creazione = timestamp

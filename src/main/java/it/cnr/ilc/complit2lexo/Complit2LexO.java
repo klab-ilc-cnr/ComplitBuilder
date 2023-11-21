@@ -6,12 +6,20 @@ package it.cnr.ilc.complit2lexo;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.joran.util.ConfigurationWatchListUtil;
 import ch.qos.logback.core.util.StatusPrinter;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -41,33 +49,81 @@ public class Complit2LexO {
         //File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/test-importer.conll");
         //File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/abbagliare_v.conll");
         //File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/altoforno_n.conll");
-        File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/merge.conll");
+        // File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/merge.conll");
+
+        // File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/polacco_noun.conll");
+        File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/lexico_lexinfo.conll");
+        File secondConnlFile = new File("/home/simone/Nextcloud/PROGETTI/magic_src/formario_MAGIC.conll");
+        File thirdConnlFile = new File("/home/simone/Nextcloud/PROGETTI/UD/UD_lexinfo.conll");
+
+        //leggo il file di mapping delle relazioni semantiche
+        HashMap<String, String> semRelHM = readSematicRelationMapping("resources/mappingSemanticRelations.tsv");
 
         /**
          * 1 - processConll legge il conll di input per la creazione delle
          * lexicalentries ogni lexical entry ha lemma, pos, una lista di forme,
          * una lista di identificativi di USEM.
          */
-        Map<String, LexicalEntry> lexicalEntries = processConll(conllFile);
-        Map<String, String> usemId2LexicalEntryId = extractUsemId(lexicalEntries);
+        //map per la memorizzazione delle LexicalEntry create (la key è la concatenazione di Lemma e Pos)
+        HashMap<String, HashMap<String, LexicalEntry>> lexicalEntries = new HashMap<>();
+        processConll(lexicalEntries, firstConnlFile);
+        System.err.println("Finished first file");
+        processConll(lexicalEntries, secondConnlFile);
+        System.err.println("Finished second file");
+        processConll(lexicalEntries, thirdConnlFile);
+        System.err.println("Finished third file");
+        //      Map<String, String> usemId2LexicalEntryId = extractUsemId(lexicalEntries);
 
+        //Creazione delle relazioni tra unità semantiche
+        //       createSemanticRelations(lexicalEntries, semRelHM);
         //System.err.println("lexicalentries: " + lexicalEntries);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("lexicalEntries.txt"));
+        List<String> lexicalEntriesByKey = new ArrayList<>(lexicalEntries.keySet());
+        Collections.sort(lexicalEntriesByKey);
+        for (Iterator<String> iterator = lexicalEntriesByKey.iterator(); iterator.hasNext();) {
+            String next = iterator.next();
+            //System.err.println("next: " + next);
+            for (Map.Entry<String, LexicalEntry> entry : lexicalEntries.get(next).entrySet()) {
+                String key = entry.getKey();
+                LexicalEntry value = entry.getValue();
+               // writer.write(String.format("key: %s, Value: %s\n", key, value.toString()));
+                writer.write(String.format("%s\n", value.toString()));
+            }
+        }
+        writer.close();
+
         System.err.println("lexicalentries: " + lexicalEntries.size());
+        System.exit(0);
         /**
          * 2 - sendLexicalEntriesToLexO memorizza in LexO le lexicalentry, in
          * particolare invoca il servizio di creazione e successivamente il
          * servizio di modifica per aggiungere lemma e pos.
          */
-        sendLexicalEntriesToLexO(lexicalEntries);
+        //sendLexicalEntriesToLexO(lexicalEntries);
 
         //Map<String, String> semRelId2LexOId = null; //sendSemanticRelationToLexO(lexicalEntries);
         //calculateSemanticRelations(lexicalEntries, semRelId2LexOId);
     }
 
-    public static Map<String, LexicalEntry> processConll(File conll) throws Exception {
+    public static HashMap<String, String> readSematicRelationMapping(String filename) {
+        InputStream inputStream = Complit2LexO.class.getResourceAsStream("/mappingSemanticRelations.txt");
 
-        //map per la memorizzazione delle LexicalEntry create (la key è la concatenazione di Lemma e Pos)
-        Map<String, LexicalEntry> lexicalEntries = new HashMap<>();
+        HashMap<String, String> ret = new HashMap();
+        try (BufferedReader br
+                = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] row = line.split("\t");
+                ret.put(row[0], row[1] + row[2]);
+            }
+        } catch (IOException ex) {
+            System.err.format("Error reading file %s\n", filename);
+            System.exit(-1);
+        }
+        return ret;
+    }
+
+    public static HashMap<String, HashMap<String, LexicalEntry>> processConll(HashMap<String, HashMap<String, LexicalEntry>> lexicalEntries, File conll) throws Exception {
 
         //map per il recupero dell'ID generato da LexO di ogni USEM inserita
         Map<String, String> usemId2LexOId = new HashMap<>();
@@ -78,36 +134,68 @@ public class Complit2LexO {
             try {
                 ConllRow cr = new ConllRow(scanner.nextLine());
                 logger.debug("ConllRow: " + cr.toString());
-                String key = cr.getLemma() + "_" + cr.getPos(); //cr.getMusId(); //l'id è la MUS se esiste oppure lemma+pos 
-                LexicalEntry le = null;
-                if (!lexicalEntries.containsKey(key)) {
+                String lexicalEntryId = cr.getLexicalEntryId(); //lemma_pos
+
+                //hashmap delle lexical entry che hanno la stessa chiave (lemma_pos): es. polacco_noun che ha 2 MUS 
+                HashMap<String, LexicalEntry> lexicalEntriesByKeyHM = null;
+
+                if (!lexicalEntries.containsKey(lexicalEntryId)) {
                     //crea la lexical entry
-                    le = new LexicalEntry();
-                    le.setLabel(cr.getLemma());
-                    le.setPos(cr.getPos());
-                    le.setLanguage("it"); //forzata la lingua a "it" che è il nodo root in LexO
-                    lexicalEntries.put(key, le);
+                    LexicalEntry le = new LexicalEntry(cr.calculateKey(), cr.getLemma(), "it", cr.getPos());//forzata la lingua a "it" che è il nodo root in LexO
+
+                    lexicalEntriesByKeyHM = new HashMap();
+                    lexicalEntriesByKeyHM.put(cr.calculateKey(), le); //la chiave è la musId oppure lemma_pos (nel caso la musId non ci sia)
+                    lexicalEntries.put(lexicalEntryId, lexicalEntriesByKeyHM);
                     logger.debug(le.toString());
                 } else {
-                    le = lexicalEntries.get(key);
-                }
-                if (cr.getMusId() != null) {
-                    le.setId(cr.getMusId());
+                    lexicalEntriesByKeyHM = lexicalEntries.get(lexicalEntryId);
                 }
 
-                if (cr.getForma() != null) {
-                    if (!le.containsForma(cr.getForma(), cr.getTraitsList())) {
-                        Form newForm = new Form();
-                        newForm.setRepresentation(cr.getForma());
-                        newForm.setTraits(cr.getTraitsList());
-                        //metto la PHU nella phoneticRepresentation per non perdere il link tra forma scritta e PHU
-                        if (cr.getMiscUnits() != null && cr.getMiscUnits(Utils.PHU) != null) {
-                            newForm.setPhoneticRep(cr.getMiscUnits(Utils.PHU).get(0).getId()); //assunzione: per ogni forma esiste una sola phu
-                        }
-                        le.addForm(newForm);
-                    }
+                //for (LexicalEntry le : lexicalEntryByKeyList) {
+                List<LexicalEntry> leList = new ArrayList<>();
+                if (lexicalEntriesByKeyHM.containsKey(cr.getMusId())) {
+                    //devo aggiungere la forma alla lista delle forme per quella mus
+                    leList.add(lexicalEntriesByKeyHM.get(cr.getMusId()));
+                } else if (cr.getMusId() != null) {
+                    //mus che non è contenuta nella hashmap quindi va creata una nuova entry nella hashmap
+                    LexicalEntry le = new LexicalEntry(cr.calculateKey(), cr.getLemma(), "it", cr.getPos());
+                    lexicalEntriesByKeyHM.put(cr.calculateKey(), le);
+                    leList.add(le);
+                } else if (lexicalEntriesByKeyHM.containsKey(cr.getLexicalEntryId())) {
+                    //forme da aggiungere alla LE indidivuata
+                    leList.add(lexicalEntriesByKeyHM.get(cr.getLexicalEntryId()));
+                } else {
+                    //caso di info proveniente da MAGIC da fondere con quella già presente in LexicO
+                    //////// TODO /////////// VERIFICARE APPROCCIO!!!
+                    leList.addAll(lexicalEntriesByKeyHM.values());//devo aggiungere le letture morfologiche a tutte le LE già create
+                    // throw new Exception("Non c'è una lista di entry per la chiave " + lexicalEntryId);
                 }
-                le.addLexicoUnits(cr.getMiscUnits());
+
+                //se la riga letta ha una musId ed uguale a quella che sto considerando nel for
+                //oppure se la riga letta NON ha una musId
+                // => aggiungo la forma se non già presente
+                if (cr.getForma() != null) {
+                    if (!cr.getForma().equals("_")) { //se la forma è _ la devo saltare
+                        for (LexicalEntry le : leList) {
+                            Form form = le.searchForma(cr); //cerco la forma all'interno delle forme già create 
+                            if (form == null) {
+                                form = new Form();
+                                form.setRepresentation(cr.getForma());
+                                form.setTraits(cr.getTraitsList());
+                                //metto la PHU nella phoneticRepresentation per non perdere il link tra forma scritta e PHU
+                                if (cr.getMiscUnits() != null && cr.getMiscUnits(Utils.PHU) != null) {
+                                    form.setPhoneticRep(cr.getMiscUnits(Utils.PHU).get(0).getId()); //assunzione: per ogni forma esiste una sola phu
+                                }
+                                le.addForm(form);
+                            } else {
+                                //la forma esiste già e i tratti sono compatibili => fondo i tratti (perché
+                                form.addTraits(cr.getTraitsList());
+                            }
+                            form.appendProvenance(cr.getId());
+                            le.addLexicoUnits(cr.getMiscUnits());
+                        }
+                    } 
+                }
 
             } catch (MalformedRowException e) {
                 System.exit(-1);
@@ -115,8 +203,8 @@ public class Complit2LexO {
 
         }
         scanner.close();
-
         return lexicalEntries;
+
     }
 
     /**
@@ -189,25 +277,28 @@ public class Complit2LexO {
         }
     }
 
-    private static Map<String, String> extractUsemId(Map<String, LexicalEntry> lexicalEntries) {
+    private static Map<String, String> extractUsemId(Map<String, List<LexicalEntry>> lexicalEntries) {
 
         int i = 0;
         Map<String, String> usem2lexicalEntryId = new HashMap<>();
         if (lexicalEntries != null) {
-            for (LexicalEntry le : lexicalEntries.values()) {
-                if (le.getLexicoUnits() != null && le.getLexicoUnits().get(Utils.USEM) != null) {
-                    List<AbstractMiscUnit> usem = le.getLexicoUnits().get(Utils.USEM);
-                    for (AbstractMiscUnit abstractLexicoUnit : usem) {
-                        i++;
-                        String usemId = abstractLexicoUnit.getId();
-                        if (!usem2lexicalEntryId.containsKey(usemId)) {
-                            if (le.getId() == null) {
-                                logger.warn("lexical entry id is {} for usemId {}", le.getId(), usemId);
+            for (String key : lexicalEntries.keySet()) {
+                for (LexicalEntry le : lexicalEntries.get(key)) {
+
+                    if (le.getLexicoUnits() != null && le.getLexicoUnits().get(Utils.USEM) != null) {
+                        List<AbstractMiscUnit> usem = le.getLexicoUnits().get(Utils.USEM);
+                        for (AbstractMiscUnit abstractLexicoUnit : usem) {
+                            i++;
+                            String usemId = abstractLexicoUnit.getId();
+                            if (!usem2lexicalEntryId.containsKey(usemId)) {
+                                if (le.getId() == null) {
+                                    logger.warn("lexical entry id is {} for usemId {}", le.getId(), usemId);
+                                } else {
+                                    usem2lexicalEntryId.put(usemId, le.getId());
+                                }
                             } else {
-                                usem2lexicalEntryId.put(usemId, le.getId());
+                                logger.error("Duplicate value for usem {}", usemId);
                             }
-                        } else {
-                            logger.error("Duplicate value for usem {}", usemId);
                         }
                     }
                 }
@@ -215,6 +306,30 @@ public class Complit2LexO {
         }
         logger.warn("i is {}", i);
         return usem2lexicalEntryId;
+    }
+
+    private static void createSemanticRelations(Map<String, List<LexicalEntry>> lexicalEntries, HashMap<String, String> semRelHM) {
+
+        for (String key : lexicalEntries.keySet()) {
+            for (LexicalEntry le : lexicalEntries.get(key)) {
+
+                if (le.getLexicoUnits() != null) {
+                    List<AbstractMiscUnit> usems = le.getLexicoUnits().get(Utils.USEM);
+                    if (usems != null) {
+                        for (AbstractMiscUnit item : usems) {
+                            SemanticUnit sem = (SemanticUnit) item;
+                            //recupero tutte le ennuple da usemrel dove sem è la sorgente
+                            List<UsemRel> usemrels = SQLConnection.getRelByUsem(sem.getId());
+                            if (usemrels != null) {
+                                for (UsemRel usemrel : usemrels) {
+                                    System.err.format("Relation with %s %s %s\n", sem.getId(), usemrel.getRelation(), usemrel.getIdUsemTarget());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

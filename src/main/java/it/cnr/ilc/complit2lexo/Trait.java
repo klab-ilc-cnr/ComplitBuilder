@@ -5,12 +5,14 @@
 package it.cnr.ilc.complit2lexo;
 
 import lombok.ToString;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  *
  * @author Simone Marchi
  */
-@ToString
+@ToString(includeFieldNames = false)
 public class Trait {
 
     //coppia chiave-valore per un tratto
@@ -42,8 +44,8 @@ public class Trait {
             this.name = t[0].split(":")[1];
             this.value = t[1].split(":")[1];
             //workaround per i verbFormMood
-            
-            if(this.name.equals("mood")) {//&& !this.value.matches("(imperative|indicative|subjuctive)")) {
+
+            if (this.name.equals("mood")) {//&& !this.value.matches("(imperative|indicative|subjuctive)")) {
                 this.name = "verbFormMood";
             }
         } else {
@@ -74,5 +76,13 @@ public class Trait {
     public int hashCode() {
         int hash = 31 * 31 * (this.name != null ? this.name.hashCode() : 0) + 31 * (this.value != null ? this.value.hashCode() : 0);
         return hash;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
+                .append("name", name)
+                .append("value", value)
+                .toString();
     }
 }
