@@ -335,7 +335,7 @@ public class Complit2LexO {
 
     private static void printPotentialVariants(LexicalEntry value) {
         List<Form> forms = value.getForms();
-        
+
         if (forms != null) {
             if (forms.size() >= 2) {
                 String id = value.getId();
@@ -346,7 +346,11 @@ public class Complit2LexO {
                         if (a.getTraits().containsAll(b.getTraits())
                                 || b.getTraits().containsAll(a.getTraits())) {
                             //sono uguali
-                            System.err.format("%s\n%s%s\n", id, a, b);
+                            if (a.getRepresentation().equals(b.getRepresentation())) {
+                                logger.error(String.format("Duplicate: %s\n%s%s\n", id, a, b));
+                            } else {
+                                System.err.format("Variant: %s\n%s%s\n", id, a, b);
+                            }
                         }
                     }
                 }

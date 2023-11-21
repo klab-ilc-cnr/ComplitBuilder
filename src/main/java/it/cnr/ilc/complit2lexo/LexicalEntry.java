@@ -220,7 +220,7 @@ public class LexicalEntry extends Metadata {
                 .append("pos", this.pos)
                 .append("id", this.getId())
                 .append("\n")
-                .appendToString((this.getForms()!=null)?this.getForms().toString():"AAAAAAAHHHHHHHHH")
+                .appendToString((this.getForms()!=null)?this.getForms().toString():"No form!")
                 .toString();
     }
 }
