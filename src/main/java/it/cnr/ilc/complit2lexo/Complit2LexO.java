@@ -72,7 +72,7 @@ public class Complit2LexO {
         System.err.println("Finished second file");
         processConll(lexicalEntries, thirdConnlFile);
         System.err.println("Finished third file");
-        //      Map<String, String> usemId2LexicalEntryId = extractUsemId(lexicalEntries);
+        Map<String, String> usemId2LexicalEntryId = extractUsemId(lexicalEntries);
 
         //Creazione delle relazioni tra unità semantiche
         //       createSemanticRelations(lexicalEntries, semRelHM);
@@ -88,7 +88,7 @@ public class Complit2LexO {
                 LexicalEntry value = entry.getValue();
                 // writer.write(String.format("key: %s, Value: %s\n", key, value.toString()));
                 writer.write(String.format("%s\n", value.toString()));
-                printPotentialVariants(value);
+                //printPotentialVariants(value);
             }
         }
         writer.close();
@@ -278,13 +278,16 @@ public class Complit2LexO {
         }
     }
 
-    private static Map<String, String> extractUsemId(Map<String, List<LexicalEntry>> lexicalEntries) {
+    private static Map<String, String> extractUsemId(Map<String, HashMap<String, LexicalEntry>> lexicalEntries) {
 
         int i = 0;
         Map<String, String> usem2lexicalEntryId = new HashMap<>();
         if (lexicalEntries != null) {
             for (String key : lexicalEntries.keySet()) {
-                for (LexicalEntry le : lexicalEntries.get(key)) {
+                HashMap<String, LexicalEntry> leHM = lexicalEntries.get(key);
+                for (Map.Entry<String, LexicalEntry> entry : leHM.entrySet()) {
+                    //String key1 = entry.getKey();
+                    LexicalEntry le = entry.getValue();
 
                     if (le.getLexicoUnits() != null && le.getLexicoUnits().get(Utils.USEM) != null) {
                         List<AbstractMiscUnit> usem = le.getLexicoUnits().get(Utils.USEM);
@@ -302,9 +305,11 @@ public class Complit2LexO {
                             }
                         }
                     }
+
                 }
             }
         }
+
         logger.warn("i is {}", i);
         return usem2lexicalEntryId;
     }
