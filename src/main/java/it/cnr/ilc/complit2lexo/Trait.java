@@ -4,6 +4,8 @@
  */
 package it.cnr.ilc.complit2lexo;
 
+import java.util.Arrays;
+import java.util.List;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -13,7 +15,10 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author Simone Marchi
  */
 @ToString(includeFieldNames = false)
-public class Trait {
+public class Trait implements Comparable<Trait> {
+
+    final List<String> nameOrder = Arrays.asList("gender", "number");
+    final List<String> valueOrder = Arrays.asList("masculine", "feminine", "singular", "plural");
 
     //coppia chiave-valore per un tratto
     private String name;
@@ -85,4 +90,24 @@ public class Trait {
                 .append("value", value)
                 .toString();
     }
+
+    @Override   
+    public int compareTo(Trait o) {
+
+        Trait t = (Trait) o;
+
+        Integer firstName = nameOrder.indexOf(getName());
+        Integer secondName = nameOrder.indexOf(getName());
+        Integer firstValue = valueOrder.indexOf(getValue());
+        Integer secondValue = valueOrder.indexOf(t.getValue());
+        
+        int comparedTo = firstName.compareTo(secondName);
+        if(comparedTo == 0) {
+            comparedTo = firstValue.compareTo(secondValue);
+        }
+        
+        return comparedTo;
+    }
+
+   
 }

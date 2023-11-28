@@ -111,6 +111,19 @@ public class ConllRow {
         return traitsList;
     }
 
+    public String getTraitsAsString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < traitsList.size(); i++) {
+            Trait trait = traitsList.get(i);
+            sb.append(trait.getName() + "_" + trait.getValue());
+            if(i < traitsList.size() - 1) {
+                sb.append("-");
+            }
+        }
+
+        return sb.toString();
+    }
+
     private void readMisc(String field) throws Exception {
         if (field != null) {
             if (!field.contains("_")) { //se MISC non e' vuoto

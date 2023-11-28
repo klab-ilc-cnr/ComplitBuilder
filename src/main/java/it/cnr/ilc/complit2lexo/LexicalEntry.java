@@ -25,7 +25,7 @@ public class LexicalEntry extends Metadata {
     @ToString.Exclude
     private String status; //working, completato, revisionato
 
-    private String label;// es. andare
+    private String label;// Lemma, es. andare
 
     @ToString.Exclude
     private String language; //es. it
@@ -48,7 +48,7 @@ public class LexicalEntry extends Metadata {
      */
     private List<Form> forms;
 
-    private List<LexicalSense> senses;
+    private List<LexicalSense> lexicalSenses;
 
     //Lexico Unit IDS
     private Map<String, List<AbstractMiscUnit>> lexicoUnits;
@@ -58,20 +58,9 @@ public class LexicalEntry extends Metadata {
     //
     //morphologicalPattern
     //otherForm
-    public LexicalEntry() {
-
-        super.setCreation("");
-        super.setCreator("importer");
-        super.setLastUpdate("");
-
-    }
-
-    public LexicalEntry(String id, String label, String language, String pos) {
-        super.setCreation("");
-        super.setCreator("importer");
-        super.setLastUpdate("");
-
+    public LexicalEntry(String id, String label, String language, String pos, String creator) {
         super.setId(id);
+        super.addCreator(creator);
         this.label = label;
         this.language = language;
         this.pos = pos;
@@ -152,12 +141,15 @@ public class LexicalEntry extends Metadata {
         this.forms.add(form);
     }
 
-    public List<LexicalSense> getSenses() {
-        return senses;
+    public List<LexicalSense> getLexicalSenses() {
+        return lexicalSenses;
     }
 
-    public void setSenses(List<LexicalSense> senses) {
-        this.senses = senses;
+    public void addLexicalSenses(LexicalSense ls) {
+        if (this.lexicalSenses == null) {
+            this.lexicalSenses = new ArrayList<>();
+        }
+        this.lexicalSenses.add(ls);
     }
 
     public Form searchForma(ConllRow row) {
@@ -220,7 +212,72 @@ public class LexicalEntry extends Metadata {
                 .append("pos", this.pos)
                 .append("id", this.getId())
                 .append("\n")
-                .appendToString((this.getForms()!=null)?this.getForms().toString():"No form!")
+                .appendToString((this.getForms() != null) ? this.getForms().toString() : "No form!")
                 .toString();
     }
+
+    private Form findGenderNumber(String gender, String number) {
+
+        if (forms != null) {
+            for (Form form : forms) {
+                boolean genderFound = false;
+                boolean numberFound = false;
+                for (Trait trait : form.getTraits()) {
+                    if (trait.getName().equals("gender") && trait.getValue().equals(gender)) {
+                        genderFound = true;
+                    } else if (trait.getName().equals("number") && trait.getValue().equals(number)) {
+                        numberFound = true;
+                    }
+                    if (genderFound && numberFound) {
+                        return form;
+                    }
+                }
+            }
+
+        }
+        return null;
+    }
+
+    private Form findInfinitive() {
+        if (forms != null) {
+            for (Form form : forms) {
+                for (Trait trait : form.getTraits()) {
+                    if (trait.getName().equals(Utils.VERBMOOD) && trait.getValue().equals(Utils.INFINITIVE)) {
+                        return form;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public void calculateCanonicalForm() {
+        //elezione della canonical form
+        //se NOUN/ADJ => 1. maschile singolare, 2. femminile singolare, 3. maschile plurale, 4. femminile plurale
+        //se VERB => 1. infinito (e se non fosse presente??? ne prendo uno a caso ad esempio la prima forma nella lista?)
+
+        if (forms != null) {
+            if ((pos.equals(Utils.NOUN) || pos.equals(Utils.ADJECTIVE))) {
+                canonicalForm = findGenderNumber(Utils.MASCULINE, Utils.SINGULAR);
+                if (canonicalForm == null) {
+                    canonicalForm = findGenderNumber(Utils.FEMININE, Utils.SINGULAR);
+                }
+                if (canonicalForm == null) {
+                    canonicalForm = findGenderNumber(Utils.MASCULINE, Utils.PLURAL);
+                }
+                if (canonicalForm == null) {
+                    canonicalForm = findGenderNumber(Utils.FEMININE, Utils.PLURAL);
+                }
+            } else if (pos.equals(Utils.VERB)) {
+                canonicalForm = findInfinitive();
+            } else { //altre pos prendo la prima forma
+                canonicalForm = forms.get(0);
+            }
+        }
+        if (canonicalForm == null) {
+            logger.warn("No canonical form for " + this.getId());
+        }
+
+    }
+
 }

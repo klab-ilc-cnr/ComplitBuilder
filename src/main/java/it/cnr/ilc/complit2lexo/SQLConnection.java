@@ -5,7 +5,6 @@
 package it.cnr.ilc.complit2lexo;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,16 +19,51 @@ import org.slf4j.LoggerFactory;
  */
 public class SQLConnection {
 
-    private static Logger logger = LoggerFactory.getLogger(SQLConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(SQLConnection.class);
 
-    private static String connectionUrl = "jdbc:mysql://localhost:3306/simplelexicon?serverTimezone=UTC";
+    public static LexicalSense getUsemInformation(String idUsem) throws SQLException {
+        LexicalSense ls = null;
+        String sql = "select comment, exemple, definition from usem where idUsem = ?;";
+        Connection conn = null;
+        try {
+            conn = C3P0DataSource.getConnection();
 
-    public static List<UsemRel> getRelByUsem(String idUsem) {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, idUsem);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                String comment = rs.getString(Utils.COMMENT);
+                String example = rs.getString(Utils.EXAMPLE);
+                String definition = rs.getString(Utils.DEFINITION);
+                ls = new LexicalSense();
+                ls.setId(idUsem);
+                ls.addCreator(Utils.LEXICO);
+                ls.setComment(comment);
+                ls.setExample(example);
+                ls.setDefinition(definition);
+            } else {
+                logger.warn(String.format("No result for usem=(%s)", idUsem));
+            }
+        } catch (SQLException e) {
+            logger.error("No result for: " + idUsem);
+            logger.error(e.getLocalizedMessage());
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+        return ls;
+    }
+
+    public static List<UsemRel> getRelByUsem(String idUsem) throws SQLException {
 
         List<UsemRel> rels = null;
         String sql = "select idUsemTarget, idRsem from usemrel where idUsem = ?;";
+        Connection conn = null;
         try {
-            Connection conn = DriverManager.getConnection(connectionUrl, "root", "root");
+            conn = C3P0DataSource.getConnection();
 
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, idUsem);
@@ -39,8 +73,8 @@ public class SQLConnection {
                 if (rels == null) {
                     rels = new ArrayList<>();
                 }
-                String idUsemTrg = rs.getString("idUsemTarget");
-                String idRelation = rs.getString("idRSem");
+                String idUsemTrg = rs.getString(Utils.IDUSEMTRG);
+                String idRelation = rs.getString(Utils.IDREL);
 
                 UsemRel rel = new UsemRel();
                 rel.setIdUsem(idUsem);
@@ -49,11 +83,14 @@ public class SQLConnection {
                 rels.add(rel);
                 // do something with the extracted data...
             }
-            return rels;
         } catch (SQLException e) {
             logger.error("No result for: " + idUsem);
-            // logger.error( e.getLocalizedMessage());
+            logger.error(e.getLocalizedMessage());
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
         }
-        return null;
+        return rels;
     }
 }

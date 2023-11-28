@@ -51,5 +51,11 @@
             <version>2.13.4</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>c3p0</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>0.9.1.2</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 </project>

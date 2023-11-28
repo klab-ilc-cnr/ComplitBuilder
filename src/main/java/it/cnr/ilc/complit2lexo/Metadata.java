@@ -14,14 +14,13 @@ import lombok.ToString;
 public abstract class Metadata {
 
     @ToString.Include
-    private  String id; //id generato dai metodi di creazione invocati su LexO
+    private String id; //id generato dai metodi di creazione invocati su LexO
 
-    //data creazione = timestamp
-    private String creation;
-    //creator = "bot"
-    private String creator;
-    //last update = timestamp
-    private String lastUpdate;
+    private String created; //timestamp
+
+    private StringBuilder creator = new StringBuilder();
+
+    private String modified; //timestamp
 
     public String getId() {
         return id;
@@ -31,29 +30,36 @@ public abstract class Metadata {
         this.id = id;
     }
 
-    public String getCreation() {
-        return creation;
+    public String getCreated() {
+        return created;
     }
 
-    public void setCreation(String creation) {
-        this.creation = creation;
+    public void setCreated(String created) {
+        this.created = created;
     }
 
     public String getCreator() {
-        return creator;
+        return creator.toString();
     }
 
-    public void setCreator(String creator) {
-        this.creator = creator;
+    public void addCreator(String creator) {
+        if(!this.creator.isEmpty()) {
+            this.creator.append(";");
+        }
+        this.creator.append(creator);
     }
 
-    public String getLastUpdate() {
-        return lastUpdate;
+    public String getModified() {
+        return modified.toString();
     }
 
-    public void setLastUpdate(String lastUpdate) {
-        this.lastUpdate = lastUpdate;
+    public void setModified(String modified) {
+        this.modified = modified;
     }
 
-    
+    public Metadata() {
+        this.created = Utils.getTimestamp();
+        this.modified = this.created;
+    }
+
 }
