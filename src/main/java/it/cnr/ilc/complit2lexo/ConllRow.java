@@ -115,7 +115,7 @@ public class ConllRow {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < traitsList.size(); i++) {
             Trait trait = traitsList.get(i);
-            sb.append(trait.getName() + "_" + trait.getValue());
+            sb.append(trait.getName()).append("_").append(trait.getValue());
             if(i < traitsList.size() - 1) {
                 sb.append("-");
             }
@@ -123,7 +123,20 @@ public class ConllRow {
 
         return sb.toString();
     }
+    
+    public String getTraitsValueAsString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < traitsList.size(); i++) {
+            Trait trait = traitsList.get(i);
+            sb.append(trait.getValue());
+            if(i < traitsList.size() - 1) {
+                sb.append("-");
+            }
+        }
 
+        return sb.toString();
+    }
+    
     private void readMisc(String field) throws Exception {
         if (field != null) {
             if (!field.contains("_")) { //se MISC non e' vuoto

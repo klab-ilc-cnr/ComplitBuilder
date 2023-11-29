@@ -37,6 +37,14 @@ import org.slf4j.LoggerFactory;
 public class Complit2LexO {
 
     private static Logger logger = LoggerFactory.getLogger(Complit2LexO.class);
+    private static List<String> excludedCharacter = Arrays.asList(
+            "|",
+            "%",
+            "µ",
+            "`",
+            "°",
+            "\""
+    );
 
     public static void main(String[] args) throws Exception {
         //Per la stampa della configurazione di LogBack
@@ -59,6 +67,7 @@ public class Complit2LexO {
         //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/polacco_noun.conll");
         //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/distaccare.conll");
         //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/a.conll");
+        //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/fails.conll");
         File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/lexico_lexinfo.conll");
         File secondConnlFile = new File("/home/simone/Nextcloud/PROGETTI/magic_src/formario_MAGIC.conll");
         File thirdConnlFile = new File("/home/simone/Nextcloud/PROGETTI/UD/UD_lexinfo.conll");
@@ -73,9 +82,9 @@ public class Complit2LexO {
          */
         Lexicon lexicon = new Lexicon("compl_it", "it", "importer");
         lexicon.addContributor("https://www.ilc.cnr.it/people/emiliano-giovannetti/");
-        lexicon.addContributor("https://www.ilc.cnr.it/people/simone-marchi/");
         lexicon.addContributor("https://www.ilc.cnr.it/people/flavia-sciolette/");
         lexicon.addContributor("https://www.ilc.cnr.it/people/andrea-bellandi/");
+        lexicon.addContributor("https://www.ilc.cnr.it/people/simone-marchi/");
         lexicon.setDescription("The CompL-it lexicon");
 
         //map per la memorizzazione delle LexicalEntry create (la key è la concatenazione di Lemma e Pos)
@@ -138,7 +147,11 @@ public class Complit2LexO {
 
         while (scanner.hasNextLine()) {
             try {
-                ConllRow cr = new ConllRow(scanner.nextLine());
+                ConllRow cr = new ConllRow(normalize(scanner.nextLine()));
+                if (!checkRow(cr)) {
+                    logger.warn(String.format("Salto la riga %s", cr.toString()));
+                    continue; //salto i token contenenti la pipe
+                }
                 logger.debug("ConllRow: " + cr.toString());
                 String lexicalEntryId = cr.getLexicalEntryId(); //lemma_pos
 
@@ -189,10 +202,16 @@ public class Complit2LexO {
                                 form.setRepresentation(cr.getForma());
                                 form.setTraits(cr.getTraitsList());
                                 //metto la PHU nella phoneticRepresentation per non perdere il link tra forma scritta e PHU
+                                StringBuffer id = new StringBuffer();
                                 if (cr.getMiscUnits() != null && cr.getMiscUnits(Utils.PHU) != null) {
                                     form.setPhoneticRep(cr.getMiscUnits(Utils.PHU).get(0).getId()); //assunzione: per ogni forma esiste una sola phu
-                                    form.setId(form.getPhoneticRep() + "_" + le.getPos() + "_" + cr.getTraitsAsString());
+                                    //id.append(form.getPhoneticRep());
+                                    id.append(cr.getForma());
+                                } else {
+                                    id.append(cr.getForma());
                                 }
+                                //Creo l'id della forma
+                                form.setId(id.append("_").append(le.getPos()).append("_").append(cr.getTraitsValueAsString()).toString());
                                 le.addForm(form);
                             } else {
                                 //la forma esiste già e i tratti sono compatibili => fondo i tratti (perché
@@ -387,5 +406,22 @@ public class Complit2LexO {
             }
         }
         writer.close();
+    }
+
+    private static boolean checkRow(ConllRow cr) {
+        boolean check = true;
+        if (cr != null) {
+            for (String ch : excludedCharacter) {
+                if ((cr.getForma() != null && cr.getForma().contains(ch))
+                        || (cr.getLemma() != null && cr.getLemma().contains(ch))) {
+                    check = false;
+                }
+            }
+        }
+        return check;
+    }
+
+    private static String normalize(String nextLine) {
+        return nextLine.replaceAll("’", "'");
     }
 }

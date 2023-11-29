@@ -24,7 +24,7 @@ public class C3P0DataSource {
     static {
         try {
             cpds.setDriverClass("com.mysql.jdbc.Driver");
-            cpds.setJdbcUrl("jdbc:mysql://localhost:3306/simplelexicon?serverTimezone=UTC");
+            cpds.setJdbcUrl("jdbc:mysql://localhost:3306/LexicO?serverTimezone=UTC");
             cpds.setUser("root");
             cpds.setPassword("root");
         } catch (PropertyVetoException e) {

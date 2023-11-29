@@ -23,7 +23,8 @@ public class SQLConnection {
 
     public static LexicalSense getUsemInformation(String idUsem) throws SQLException {
         LexicalSense ls = null;
-        String sql = "select comment, exemple, definition from usem where idUsem = ?;";
+        //String sql = "select comment, exemple, definition from usem where idUsem = ?;";
+        String sql = "select REPLACE(comment,'’','\\'') as comment, REPLACE(exemple,'’','\\'') as exemple, REPLACE(definition, '’','\\'') as definition from usem where idUsem = ?;";
         Connection conn = null;
         try {
             conn = C3P0DataSource.getConnection();
@@ -40,15 +41,14 @@ public class SQLConnection {
                 ls = new LexicalSense();
                 ls.setId(idUsem);
                 ls.addCreator(Utils.LEXICO);
-                ls.setComment(comment);
-                ls.setExample(example);
-                ls.setDefinition(definition);
+                ls.setComment((comment!=null?comment.trim():null));
+                ls.setExample((example!=null?example.trim():null));
+                ls.setDefinition((definition!=null?definition.trim():null));
             } else {
                 logger.warn(String.format("No result for usem=(%s)", idUsem));
             }
         } catch (SQLException e) {
-            logger.error("No result for: " + idUsem);
-            logger.error(e.getLocalizedMessage());
+            logger.error(String.format("SQL: %s, Error: %s", sql,e.getLocalizedMessage()));
         } finally {
             if (conn != null) {
                 conn.close();

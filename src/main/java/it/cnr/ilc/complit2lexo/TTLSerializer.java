@@ -10,12 +10,16 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author Simone Marchi
  */
 public class TTLSerializer {
+
+    private static Pattern escapedCharacters = Pattern.compile("([\"'’])");
 
     private final static String TTLPREFIXES
             = """
@@ -36,7 +40,7 @@ public class TTLSerializer {
 
         if (lexicon != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter("/home/simone/complit.ttl"));
-            
+
             HashMap<String, HashMap<String, LexicalEntry>> lexicalEntries = lexicon.getLexicalEntries();
             if (lexicalEntries != null) {
                 StringBuilder sb = new StringBuilder();
@@ -49,7 +53,7 @@ public class TTLSerializer {
                     for (Map.Entry<String, LexicalEntry> entry : leHM.entrySet()) {
                         //String key1 = entry.getKey();
                         LexicalEntry le = entry.getValue();
-                        sb.append(Utils.TAB).append(Utils.LENTRY).append(" ").append(Utils.PLEX).append(le.getId()).append(Utils.ENDROW);
+                        sb.append(Utils.TAB).append(Utils.LENTRY).append(" ").append(Utils.PLEX).append(escape(le.getId())).append(Utils.ENDROW);
                     }
                 }
                 sb.delete(sb.lastIndexOf(";"), sb.length()).append(" .\n");
@@ -71,9 +75,9 @@ public class TTLSerializer {
                 }
                 //sb.delete(sb.lastIndexOf(";"), sb.length()).append(" .\n");
 
-               // System.err.println(sb.toString());
-               writer.write(sb.toString());
-               writer.close();
+                // System.err.println(sb.toString());
+                writer.write(sb.toString());
+                writer.close();
             }
         }
     }
@@ -81,7 +85,7 @@ public class TTLSerializer {
     private static String lexiconToTurtleString(Lexicon lex) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(Utils.PLEX).append(lex.getId()).append(" a ").append("lime:Lexicon").append(Utils.ENDROW);
+        sb.append(Utils.PLEX).append(escape(lex.getId())).append(" a ").append("lime:Lexicon").append(Utils.ENDROW);
         sb.append(printDCT(lex.getCreated(), lex.getCreator(), lex.getModified(), Utils.TAB));
         sb.append(Utils.TAB).append(Utils.DCTDESCRIPTION).append(" \"").append(lex.getDescription()).append("\"").append(Utils.ENDROW);
         sb.append(printContributors(lex, Utils.TAB));
@@ -112,14 +116,14 @@ public class TTLSerializer {
 
     private static String lexicalEntryAsTurtle(LexicalEntry le) {
         StringBuilder sb = new StringBuilder();
-        sb.append(Utils.PLEX).append(le.getId()).append(" a ").append(Utils.WORD).append(Utils.ENDROW);
+        sb.append(Utils.PLEX).append(escape(le.getId())).append(" a ").append(Utils.WORD).append(Utils.ENDROW);
         sb.append(metaDCT(le, Utils.TAB));
         sb.append(Utils.TAB).append(Utils.TERMSTATUS).append(" \"").append(Utils.STATUS_WORKING).append("\"").append(Utils.ENDROW);
         sb.append(Utils.TAB).append(Utils.RDFSLABEL).append(" \"").append(le.getLabel()).append("\"@").append(le.getLanguage()).append(Utils.ENDROW);
         sb.append(Utils.TAB).append(Utils.LEXINFO_POS).append(" ").append(Utils.PLEXINFO).append(le.getPos()).append(Utils.ENDROW);
         sb.append(lexicalSensesIndexToTurtle(le.getLexicalSenses(), Utils.TAB));
         if (le.getCanonicalForm() != null) {
-            sb.append(Utils.TAB).append(Utils.OCANONICAL_FORM).append(" ").append(Utils.PLEX).append(le.getCanonicalForm().getId()).append(Utils.ENDROW);
+            sb.append(Utils.TAB).append(Utils.OCANONICAL_FORM).append(" ").append(Utils.PLEX).append(escape(le.getCanonicalForm().getId())).append(Utils.ENDROW);
         }
         sb.append(otherFormsIndexToTurtle(le, Utils.TAB));
         sb.delete(sb.lastIndexOf(";"), sb.length()).append(" .\n");
@@ -133,7 +137,7 @@ public class TTLSerializer {
         if (lexicalSenses != null) {
             String prefix = (rowPrefix != null ? rowPrefix : "");
             for (LexicalSense ls : lexicalSenses) {
-                sb.append(prefix).append(Utils.OSENSE).append(" ").append(Utils.PLEX).append(ls.getId()).append(Utils.ENDROW);
+                sb.append(prefix).append(Utils.OSENSE).append(" ").append(Utils.PLEX).append(escape(ls.getId())).append(Utils.ENDROW);
             }
         }
         return sb.toString();
@@ -147,7 +151,7 @@ public class TTLSerializer {
 
                 for (Form form : le.getForms()) {
                     if (!form.equals(le.getCanonicalForm())) {
-                        sb.append(prefix).append(Utils.OOTHERFORM).append(" ").append(Utils.PLEX).append(form.getId()).append(Utils.ENDROW);
+                        sb.append(prefix).append(Utils.OOTHERFORM).append(" ").append(Utils.PLEX).append(escape(form.getId())).append(Utils.ENDROW);
                     }
                 }
             }
@@ -159,7 +163,7 @@ public class TTLSerializer {
         StringBuilder sb = new StringBuilder();
         if (le.getCanonicalForm() != null) {
             Form cf = le.getCanonicalForm();
-            sb.append(Utils.PLEX).append(cf.getId()).append(" a ").append(Utils.OFORM).append(Utils.ENDROW);
+            sb.append(Utils.PLEX).append(escape(cf.getId())).append(" a ").append(Utils.OFORM).append(Utils.ENDROW);
             sb.append(metaDCT(cf, Utils.TAB));
             sb.append(traitsAsTurtle(cf.getTraits(), Utils.TAB));
 
@@ -184,7 +188,7 @@ public class TTLSerializer {
             if (le.getForms() != null) {
                 for (Form form : le.getForms()) {
                     if (!form.equals(le.getCanonicalForm())) {
-                        sb.append(Utils.PLEX).append(form.getId()).append(" a ").append(Utils.OFORM).append(Utils.ENDROW);
+                        sb.append(Utils.PLEX).append(escape(form.getId())).append(" a ").append(Utils.OFORM).append(Utils.ENDROW);
                         sb.append(metaDCT(form, Utils.TAB));
                         sb.append(traitsAsTurtle(form.getTraits(), Utils.TAB));
 
@@ -201,19 +205,25 @@ public class TTLSerializer {
         if (le != null) {
             if (le.getLexicalSenses() != null) {
                 for (LexicalSense ls : le.getLexicalSenses()) {
-                    sb.append(Utils.PLEX).append(ls.getId()).append(" a ").append(Utils.OLEXICAL_SENSE).append(Utils.ENDROW);
+                    sb.append(Utils.PLEX).append(escape(ls.getId())).append(" a ").append(Utils.OLEXICAL_SENSE).append(Utils.ENDROW);
                     sb.append(metaDCT(le, Utils.TAB));
                     if (ls.getDefinition() != null) {
-                        sb.append(Utils.TAB).append(Utils.SDEFINITION).append(" \"").append(ls.getDefinition()).append(" \"").append(Utils.ENDROW);
+                        sb.append(Utils.TAB).append(Utils.SDEFINITION).append(" \"").append(escape(ls.getDefinition())).append("\"").append(Utils.ENDROW);
                     }
                     if (ls.getExample() != null) {
-                        sb.append(Utils.TAB).append(Utils.LSENSEEXAMPLE).append(" \"").append(ls.getExample()).append(" \"").append(Utils.ENDROW);
+                        sb.append(Utils.TAB).append(Utils.LSENSEEXAMPLE).append(" \"").append(ls.getExample().replaceAll("\"", "\\\\\"")).append("\"").append(Utils.ENDROW);
                     }
                     sb.delete(sb.lastIndexOf(";"), sb.length()).append(" .\n");
                 }
             }
         }
         return sb.toString();
+    }
+
+    private static String escape(String s) {
+       // return s.replaceAll("\"","\\\\\"" ).replaceAll("'", "\'");
+       
+        return escapedCharacters.matcher(s).replaceAll("\\\\$1");
     }
 
     private static String metaDCT(Metadata meta) {
