@@ -2,6 +2,8 @@ package it.cnr.ilc.complit2lexo;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.List;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -65,9 +67,10 @@ public class Utils {
     public static final String OCANONICAL_FORM = "ontolex:canonicalForm";
     public static final String OSENSE = "ontolex:sense";
     public static final String OOTHERFORM = "ontolex:otherForm";
-    public static final String OFORM = "ontolex:form";
+    public static final String OFORM = "ontolex:Form";
     public static final String OLEXICAL_SENSE = "ontolex:LexicalSense";
-
+    public static final String OWRITTEN_REP = "ontolex:writtenRep";
+    
     //skos
     public static final String SDEFINITION = "skos:definition";
 
@@ -76,17 +79,34 @@ public class Utils {
     //Generic Prefix
     public static final String PLEX = "lex:";
     public static final String PLEXINFO = "lexinfo:";
-    
+
     //Lime
     public static final String LLANG = "lime:language";
     public static final String LLINGCAT = "lime:linguisticCatalog";
     public static final String LENTRY = "lime:entry";
-    
+
     //CompL-it
     public static final String COMPLIT_URL = "http://klab/lexicon/vocabulary/complit#";
-    
+    private static List<String> excludedCharacter = Arrays.asList("|", "%", "\u00b5", "`", "\u00b0", "\"");
+
     public static String getTimestamp() {
         Timestamp tm = new Timestamp(System.currentTimeMillis());
         return timestampFormat.format(tm);
+    }
+
+    static String normalize(String nextLine) {
+        return nextLine.replaceAll("\u2019", "'");
+    }
+
+    static boolean checkRow(ConllRow cr) {
+        boolean check = true;
+        if (cr != null) {
+            for (String ch : excludedCharacter) {
+                if ((cr.getForma() != null && cr.getForma().contains(ch)) || (cr.getLemma() != null && cr.getLemma().contains(ch))) {
+                    check = false;
+                }
+            }
+        }
+        return check;
     }
 }

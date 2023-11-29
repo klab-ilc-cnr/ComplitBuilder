@@ -165,7 +165,7 @@ public class LexicalEntry extends Metadata {
             }
             if (getForms() != null) {
                 for (Form form : getForms()) {
-                    if (form.getRepresentation().equals(forma)) {
+                    if (form.getWrittenRep().equals(forma)) {
                         //compare traits
                         if (form.getTraits().containsAll(traits) || traits.containsAll(form.getTraits())) {
                             List<Trait> broaderTraits = form.getTraits().containsAll(traits) ? form.getTraits() : traits;

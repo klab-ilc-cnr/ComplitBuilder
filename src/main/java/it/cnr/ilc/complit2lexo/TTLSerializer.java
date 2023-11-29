@@ -191,7 +191,7 @@ public class TTLSerializer {
                         sb.append(Utils.PLEX).append(escape(form.getId())).append(" a ").append(Utils.OFORM).append(Utils.ENDROW);
                         sb.append(metaDCT(form, Utils.TAB));
                         sb.append(traitsAsTurtle(form.getTraits(), Utils.TAB));
-
+                        sb.append(Utils.OWRITTEN_REP).append(" \"").append(form.getWrittenRep()).append("\"@").append(le.getLanguage()).append(Utils.ENDROW);
                         sb.delete(sb.lastIndexOf(";"), sb.length()).append(" .\n");
                     }
                 }

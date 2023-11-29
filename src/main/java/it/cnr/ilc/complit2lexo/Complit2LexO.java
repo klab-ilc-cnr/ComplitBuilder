@@ -37,14 +37,6 @@ import org.slf4j.LoggerFactory;
 public class Complit2LexO {
 
     private static Logger logger = LoggerFactory.getLogger(Complit2LexO.class);
-    private static List<String> excludedCharacter = Arrays.asList(
-            "|",
-            "%",
-            "µ",
-            "`",
-            "°",
-            "\""
-    );
 
     public static void main(String[] args) throws Exception {
         //Per la stampa della configurazione di LogBack
@@ -147,8 +139,8 @@ public class Complit2LexO {
 
         while (scanner.hasNextLine()) {
             try {
-                ConllRow cr = new ConllRow(normalize(scanner.nextLine()));
-                if (!checkRow(cr)) {
+                ConllRow cr = new ConllRow(Utils.normalize(scanner.nextLine()));
+                if (!Utils.checkRow(cr)) {
                     logger.warn(String.format("Salto la riga %s", cr.toString()));
                     continue; //salto i token contenenti la pipe
                 }
@@ -200,16 +192,15 @@ public class Complit2LexO {
                             if (form == null) {
                                 form = new Form(creator);
                                 form.setRepresentation(cr.getForma());
+                                form.setWrittenRep(cr.getForma());
                                 form.setTraits(cr.getTraitsList());
                                 //metto la PHU nella phoneticRepresentation per non perdere il link tra forma scritta e PHU
-                                StringBuffer id = new StringBuffer();
+                                StringBuilder id = new StringBuilder();
                                 if (cr.getMiscUnits() != null && cr.getMiscUnits(Utils.PHU) != null) {
                                     form.setPhoneticRep(cr.getMiscUnits(Utils.PHU).get(0).getId()); //assunzione: per ogni forma esiste una sola phu
                                     //id.append(form.getPhoneticRep());
-                                    id.append(cr.getForma());
-                                } else {
-                                    id.append(cr.getForma());
                                 }
+                                id.append(cr.getForma());
                                 //Creo l'id della forma
                                 form.setId(id.append("_").append(le.getPos()).append("_").append(cr.getTraitsValueAsString()).toString());
                                 le.addForm(form);
@@ -234,7 +225,7 @@ public class Complit2LexO {
 
     private static HashMap<String, List<SemRel>> createSemanticRelations(Map<String, HashMap<String, LexicalEntry>> lexicalEntries, HashMap<String, String> semRelHM) throws SQLException, IOException, InterruptedException {
 
-        //hashmap dove la chiare è la idUsem e il value è la lista delle usemrel collegate a idUsem
+        //hashmap dove la chiave è la idUsem e il value è la lista delle usemrel collegate a idUsem
         HashMap<String, List<SemRel>> semRels = null;
         if (lexicalEntries != null) {
             semRels = new HashMap<>();
@@ -319,7 +310,7 @@ public class Complit2LexO {
                         if (le.getForms() != null) {
                             for (Form form : le.getForms()) {
                                 String formId = LexO.createForm(le.getId(), form.getId()); //le.getId() è l'aggancio tra la forma da creare e la lexical entry alla quale appartiene
-                                LexO.setFormWrittenRepr(le.getCreator(), formId, form.getRepresentation());
+                                LexO.setFormWrittenRepr(le.getCreator(), formId, form.getWrittenRep());
                                 for (Trait trait : form.getTraits()) {
                                     LexO.addMophologicTrait(le.getCreator(), formId, trait.getName(), trait.getValue());
                                     logger.debug("Trait: name {}, value {}", trait.getName(), trait.getValue());
@@ -377,7 +368,7 @@ public class Complit2LexO {
                         if (a.getTraits().containsAll(b.getTraits())
                                 || b.getTraits().containsAll(a.getTraits())) {
                             //sono uguali
-                            if (a.getRepresentation().equals(b.getRepresentation())) {
+                            if (a.getWrittenRep().equals(b.getWrittenRep())) {
                                 logger.error(String.format("Duplicate: %s\n%s%s\n", id, a, b));
                             } else {
                                 System.err.format("Variant: %s\n%s%s\n", id, a, b);
@@ -408,20 +399,4 @@ public class Complit2LexO {
         writer.close();
     }
 
-    private static boolean checkRow(ConllRow cr) {
-        boolean check = true;
-        if (cr != null) {
-            for (String ch : excludedCharacter) {
-                if ((cr.getForma() != null && cr.getForma().contains(ch))
-                        || (cr.getLemma() != null && cr.getLemma().contains(ch))) {
-                    check = false;
-                }
-            }
-        }
-        return check;
-    }
-
-    private static String normalize(String nextLine) {
-        return nextLine.replaceAll("’", "'");
-    }
 }
