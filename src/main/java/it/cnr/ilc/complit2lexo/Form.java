@@ -4,9 +4,10 @@
  */
 package it.cnr.ilc.complit2lexo;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import java.util.List;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  *
@@ -16,12 +17,22 @@ import lombok.ToString;
 public class Form extends Metadata {
 
     private String representation;
+    @ToString.Exclude
     private String writtenRep;
     private String phoneticRep;
-    
-    List<Trait> traits; //morfologia
-    
-    @JsonGetter 
+
+    private List<Trait> traits; //morfologia
+
+    private StringBuilder provenance = new StringBuilder();
+
+    public String getProvenance() {
+        return provenance.toString();
+    }
+
+    public void appendProvenance(String provenance) {
+        this.provenance.append(provenance);
+    }
+
     public String getRepresentation() {
         return representation;
     }
@@ -45,8 +56,7 @@ public class Form extends Metadata {
     public void setPhoneticRep(String phoneticRep) {
         this.phoneticRep = phoneticRep;
     }
-  
-    
+
     public List<Trait> getTraits() {
         return traits;
     }
@@ -54,7 +64,34 @@ public class Form extends Metadata {
     public void setTraits(List<Trait> traits) {
         this.traits = traits;
     }
-    
-    
-    
+
+    public void addTraits(List<Trait> traits) {
+        for (Trait trait : traits) {
+            if (!this.traits.contains(trait)) {
+                this.traits.add(trait);
+            }
+        }
+    }
+
+    public Form(String creator) {
+        super.addCreator(creator);
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
+                .append("representation", representation)
+                .appendToString(traits.toString())
+                .append("provenance", provenance)
+                .append("\n")
+                .toString();
+    }
+
+    public String getTraitsAsString() {
+        StringBuilder s = new StringBuilder();
+        for (Trait trait : traits) {
+            s.append(trait.getName()).append("=").append(trait.getValue()).append(";");
+        }
+        return s.toString();
+    }
 }

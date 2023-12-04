@@ -29,11 +29,11 @@ public class LexO {
 
     private static HttpClient client = null;
 
-    private static final String baseurl = "http://licodemo.ilc.cnr.it:8080/LexO-backend-simone_test/service/";
-    //private static final String baseurl = "http://localhost:8080/LexO-backend-simone_test/service/";
-    private static final String author = "author=importer";
-    private static final String prefix = "prefix=lex";
-    private static final String baseIRI = "baseIRI=http%3A%2F%2Flexica%2Fmylexicon%23";
+    //private static final String baseurl = "http://licodemo.ilc.cnr.it:8080/LexO-backend-simone_test/service/";
+    private static final String BASEURL = "http://localhost:8080/LexO-backend-simone_test/service/";
+    private static final String AUTHOR = "author=importer";
+    private static final String PREFIX = "prefix=lex";
+    private static final String BASEIRI = "baseIRI=http%3A%2F%2Flexica%2Fmylexicon%23";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         // get("http://licodemo.ilc.cnr.it:8080/LexO-backend-simone_test/service/lexicon/data/languages");
@@ -43,26 +43,39 @@ public class LexO {
     }
 //https://mkyong.com/java/java-11-httpclient-examples/
 
-    public static String createLexicalEntry() {
-        return createEntry("lexicalEntry", author, prefix, baseIRI);
+    public static String createLexicalEntry(String id) {
+        return createEntry("lexicalEntry", AUTHOR, PREFIX, BASEIRI, null, id);
         //https://klab.ilc.cnr.it/maia-compl-it-be/maia/lexo/lexicon/creation/lexicalEntry?author=simone.marchi&prefix=lex&baseIRI=http%3A%2F%2Flexica%2Fmylexicon%23
     }
 
-    public static String createForm(String lexicalEntryId) {
-        return createEntry("form", author, prefix, baseIRI, lexicalEntryId);
+    public static String createLexicalSense(String lexicalEntryId, String senseId) {
+        return createEntry("lexicalSense", AUTHOR, PREFIX, BASEIRI, lexicalEntryId, senseId);
+        //https://klab.ilc.cnr.it/maia-compl-it-be/maia/lexo/lexicon/creation/lexicalEntry?author=simone.marchi&prefix=lex&baseIRI=http%3A%2F%2Flexica%2Fmylexicon%23
+    }
+
+    /**
+     * Creazione di una forma
+     *
+     * @param lexicalEntryId identificativo della lexical entry a cui la forma
+     * va agganciata/riferita
+     * @return
+     */
+    public static String createForm(String lexicalEntryId, String formId) {
+        return createEntry("form", AUTHOR, PREFIX, BASEIRI, lexicalEntryId, formId);
         //https://klab.ilc.cnr.it/maia-compl-it-be/maia/lexo/lexicon/creation/lexicalEntry?author=simone.marchi&prefix=lex&baseIRI=http%3A%2F%2Flexica%2Fmylexicon%23
     }
 
     private static String createEntry(String typeOfEntity, String author, String prefix, String baseIRI) {
-        return createEntry(typeOfEntity, author, prefix, baseIRI, null);
+        return createEntry(typeOfEntity, author, prefix, baseIRI, null, null);
     }
 
-    private static String createEntry(String typeOfEntity, String author, String prefix, String baseIRI, String id) {
+    private static String createEntry(String typeOfEntity, String author, String prefix, String baseIRI, String lexicalEntryId, String desiredId) {
         String entryID = null;
 
         try {
-            HttpResponse<String> response = get(baseurl + "lexicon/creation/" + typeOfEntity + "?"
-                    + (id != null ? "lexicalEntryID=" + URLEncoder.encode(id, StandardCharsets.UTF_8.toString()) + "&" : "")
+            HttpResponse<String> response = get(BASEURL + "lexicon/creation/" + typeOfEntity + "?"
+                    + (lexicalEntryId != null ? "lexicalEntryID=" + URLEncoder.encode(lexicalEntryId, StandardCharsets.UTF_8.toString()) + "&" : "")
+                    + (desiredId != null ? "desiredID=" + URLEncoder.encode(desiredId, StandardCharsets.UTF_8.toString()) + "&" : "")
                     + author + "&"
                     + prefix + "&"
                     + baseIRI); // + author=simone.marchi&prefix=lex&baseIRI=http%3A%2F%2Flexica%2Fmylexicon%23");
@@ -73,14 +86,27 @@ public class LexO {
                     JsonNode idNode = node.path(typeOfEntity);
                     entryID = idNode.asText();
                 } else {
-                    logger.error("Error creating {} with id {}", typeOfEntity, id);
+                    logger.error("Error creating {}: {}", typeOfEntity, response.body());
                 }
             }
         } catch (IOException | InterruptedException ex) {
             logger.error(ex.getLocalizedMessage());
         }
-
         return entryID;
+    }
+
+    //POST /maia/lexo/lexicon/update/linguisticRelation?id=http%3A%2F%2Frut%2Fsomali%2Fferrandi%23le_2ewUDaqL65fx6vdqJow4wa_noun_sense1 
+    public static void createSemanticRelation(String user, String subject, String relation, String object) throws IOException, InterruptedException {
+        /*{"type":"senseRel",
+        "relation":"http://www.lexinfo.net/ontology/3.0/lexinfo#approximate",
+        "currentValue":"",
+        "value":"http://rut/somali/ferrandi#le_2ewUDaqL65fx6vdqJow4wa_noun_sense1"}
+         */
+        String type = "senseRel";
+        String entityType = "linguisticRelation";
+
+        updateRelationValueByEntityType(user, subject, entityType, type, relation, object);
+
     }
 
     //https://klab.ilc.cnr.it/maia-demo-simone-be/maia/lexo/lexicon/update/form?id=http%3A%2F%2Flexica%2Fmylexicon%23LexO_2023-11-0919_40_06_586&user=simone
@@ -102,12 +128,13 @@ public class LexO {
         updateRelationValueByEntityType(user, id, entityType, type, lexinfoRelation, lexinfoValue);
     }
 
-    //https://klab.ilc.cnr.it/maia-demo-simone-be/maia/lexo/lexicon/update/lexicalEntry?user=simone&id=http%3A%2F%2Flexica%2Fmylexicon%23LexO_2023-11-0918_42_10_954
+    // /lexicon/update/lexicalEntry?user=simone&id=http%3A%2F%2Flexica%2Fmylexicon%23LexO_2023-11-0918_42_10_954
     public static void setLexicalEntryLabel(String user, String id, String label) throws IOException, InterruptedException {
 //{"relation":"http://www.w3.org/2000/01/rdf-schema#label","value":"pippo"}
         updateLexicalEntry(user, id, "http://www.w3.org/2000/01/rdf-schema#label", label);
     }
 
+    // /lexicon/update/lexicalEntry?user=simone.marchi&id=http%3A%2F%2Flexica%2Fmylexicon%23LexO_2023-11-2317_11_58_433
     public static void setLexicalEntryLanguage(String user, String id, String lang) throws IOException, InterruptedException {
         //{"relation":"http://www.w3.org/ns/lemon/lime#entry","value":"it"}
         updateLexicalEntry(user, id, "http://www.w3.org/ns/lemon/lime#entry", lang);
@@ -142,18 +169,18 @@ public class LexO {
     }
 
     // /lexicon/update/
-    private static void updateRelationValueByEntityType(String user, String id,
-            String entityType, String type, String relation, String value) throws IOException, InterruptedException {
-        String uri = baseurl
+    private static void updateRelationValueByEntityType(String user, String subject,
+            String entityType, String type, String relation, String object) throws IOException, InterruptedException {
+        String uri = BASEURL
                 + "lexicon/update/" + entityType + "?"
                 + "user=" + user
-                + "&id=" + URLEncoder.encode(id, StandardCharsets.UTF_8.toString());
+                + "&id=" + URLEncoder.encode(subject, StandardCharsets.UTF_8.toString());
         Map<String, String> data = new HashMap<>();
         if (type != null) {
             data.put("type", type);
         }
         data.put("relation", relation);
-        data.put("value", value);
+        data.put("value", object);
         data.put("currentValue", "");
 
         post(uri, data);
@@ -161,6 +188,7 @@ public class LexO {
 
     private static HttpResponse<String> get(String uri) throws IOException, InterruptedException {
 
+        logger.info("GET uri: " + uri);
         Instant start = Instant.now();
         if (client == null) {
             client = HttpClient.newHttpClient();
@@ -208,7 +236,7 @@ public class LexO {
 
         if (response.statusCode() != 200) {
             //logger.error("Error in POST for url {} with data: {} => {}", uri, data, response.body());
-            logger.error("Error in POST {}", response.body());
+            logger.error("Error in POST: {}", response.body());
         }
         logger.debug("response: " + response.statusCode());
         logger.debug("response: " + response.body());
@@ -241,5 +269,4 @@ public class LexO {
         String jsonData = objectMapper.writeValueAsString(data);
         return HttpRequest.BodyPublishers.ofString(jsonData);
     }
-
 }

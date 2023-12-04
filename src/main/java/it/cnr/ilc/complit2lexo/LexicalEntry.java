@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,24 +18,29 @@ import org.slf4j.LoggerFactory;
  *
  * @author Simone Marchi
  */
-@ToString
+@ToString(callSuper = true)
 public class LexicalEntry extends Metadata {
 
     private static Logger logger = LoggerFactory.getLogger(LexicalEntry.class);
-
+    @ToString.Exclude
     private String status; //working, completato, revisionato
 
-    private String label;// es. andare
+    private String label;// Lemma, es. andare
+
+    @ToString.Exclude
     private String language; //es. it
 
+    @ToString.Exclude
     private String type = "http://www.w3.org/ns/lemon/ontolex#Word";
     //http://www.w3.org/ns/lemon/ontolex#MultiwordExpression nel caso di multiword
 
     private String pos; //es. "http://www.lexinfo.net/ontology/3.0/lexinfo#" + POS dal merge
     //Lemma
-
+    
+    @ToString.Exclude
     private String author; //in fase di creazione coincide con il creatore
 
+    @ToString.Exclude
     private Form canonicalForm; //lemma
 
     /* The 'lexical form' property relates a lexical entry to 
@@ -41,7 +48,7 @@ public class LexicalEntry extends Metadata {
      */
     private List<Form> forms;
 
-    private List<LexicalSense> senses;
+    private List<LexicalSense> lexicalSenses;
 
     //Lexico Unit IDS
     private Map<String, List<AbstractMiscUnit>> lexicoUnits;
@@ -51,12 +58,12 @@ public class LexicalEntry extends Metadata {
     //
     //morphologicalPattern
     //otherForm
-    public LexicalEntry() {
-
-        super.setCreation("");
-        super.setCreator("importer");
-        super.setLastUpdate("");
-
+    public LexicalEntry(String id, String label, String language, String pos, String creator) {
+        super.setId(id);
+        super.addCreator(creator);
+        this.label = label;
+        this.language = language;
+        this.pos = pos;
     }
 
     public Map<String, List<AbstractMiscUnit>> getLexicoUnits() {
@@ -134,30 +141,47 @@ public class LexicalEntry extends Metadata {
         this.forms.add(form);
     }
 
-    public List<LexicalSense> getSenses() {
-        return senses;
+    public List<LexicalSense> getLexicalSenses() {
+        return lexicalSenses;
     }
 
-    public void setSenses(List<LexicalSense> senses) {
-        this.senses = senses;
+    public void addLexicalSenses(LexicalSense ls) {
+        if (this.lexicalSenses == null) {
+            this.lexicalSenses = new ArrayList<>();
+        }
+        this.lexicalSenses.add(ls);
     }
 
-    public boolean containsForma(String forma, List<Trait> traits) {
+    public Form searchForma(ConllRow row) {
+        Form ret = null;
+        if (row != null) {
+            String forma = row.getForma();
+            List<Trait> traits = row.getTraitsList();
 
-        if (getForms() != null) {
-            for (Form form : getForms()) {
-                if (form.getRepresentation().equals(forma)) {
-                    //compare trais
-                    if (form.getTraits().containsAll(traits)) {
-
-                        logger.warn("Entry already exists: {} {}", forma, traits.toString());
-                        return true;
+            List<AbstractMiscUnit> phus = row.getMiscUnits(Utils.PHU);
+            String phuId = null;
+            if (phus != null) {
+                phuId = ((PhonologicalUnit) phus.get(0)).getId(); //la phu se esiste è unica per ogni riga del conll
+            }
+            if (getForms() != null) {
+                for (Form form : getForms()) {
+                    if (form.getWrittenRep().equals(forma)) {
+                        //compare traits
+                        if (form.getTraits().containsAll(traits) || traits.containsAll(form.getTraits())) {
+                            List<Trait> broaderTraits = form.getTraits().containsAll(traits) ? form.getTraits() : traits;
+                            if (phuId != null && form.getPhoneticRep() != null && phuId.equals(form.getPhoneticRep())) {
+                                logger.warn("Entry already exists: {} {}", forma, broaderTraits);
+                                return form;
+                            } else if (phuId == null || form.getPhoneticRep() == null) {
+                                return form;
+                            }
+                        }
                     }
                 }
             }
+            logger.debug("Not found: {} {}", forma, traits.toString());
         }
-        logger.debug("Not found: {} {}", forma, traits.toString());
-        return false;
+        return ret;
     }
 
     public void addLexicoUnits(Map<String, List<AbstractMiscUnit>> units) {
@@ -165,7 +189,7 @@ public class LexicalEntry extends Metadata {
         if (units != null) {
             for (String key : units.keySet()) {
                 if (lexicoUnits == null) {
-                    lexicoUnits = new  HashMap<>();
+                    lexicoUnits = new HashMap<>();
                 }
                 if (!lexicoUnits.containsKey(key)) {
                     lexicoUnits.put(key, units.get(key));
@@ -179,6 +203,81 @@ public class LexicalEntry extends Metadata {
             }
 
         }
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
+                .append("label", this.label)
+                .append("pos", this.pos)
+                .append("id", this.getId())
+                .append("\n")
+                .appendToString((this.getForms() != null) ? this.getForms().toString() : "No form!")
+                .toString();
+    }
+
+    private Form findGenderNumber(String gender, String number) {
+
+        if (forms != null) {
+            for (Form form : forms) {
+                boolean genderFound = false;
+                boolean numberFound = false;
+                for (Trait trait : form.getTraits()) {
+                    if (trait.getName().equals("gender") && trait.getValue().equals(gender)) {
+                        genderFound = true;
+                    } else if (trait.getName().equals("number") && trait.getValue().equals(number)) {
+                        numberFound = true;
+                    }
+                    if (genderFound && numberFound) {
+                        return form;
+                    }
+                }
+            }
+
+        }
+        return null;
+    }
+
+    private Form findInfinitive() {
+        if (forms != null) {
+            for (Form form : forms) {
+                for (Trait trait : form.getTraits()) {
+                    if (trait.getName().equals(Utils.VERBMOOD) && trait.getValue().equals(Utils.INFINITIVE)) {
+                        return form;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public void calculateCanonicalForm() {
+        //elezione della canonical form
+        //se NOUN/ADJ => 1. maschile singolare, 2. femminile singolare, 3. maschile plurale, 4. femminile plurale
+        //se VERB => 1. infinito (e se non fosse presente??? ne prendo uno a caso ad esempio la prima forma nella lista?)
+
+        if (forms != null) {
+            if ((pos.equals(Utils.NOUN) || pos.equals(Utils.ADJECTIVE))) {
+                canonicalForm = findGenderNumber(Utils.MASCULINE, Utils.SINGULAR);
+                if (canonicalForm == null) {
+                    canonicalForm = findGenderNumber(Utils.FEMININE, Utils.SINGULAR);
+                }
+                if (canonicalForm == null) {
+                    canonicalForm = findGenderNumber(Utils.MASCULINE, Utils.PLURAL);
+                }
+                if (canonicalForm == null) {
+                    canonicalForm = findGenderNumber(Utils.FEMININE, Utils.PLURAL);
+                }
+            } else if (pos.equals(Utils.VERB)) {
+                canonicalForm = findInfinitive();
+            } else { //altre pos prendo la prima forma
+                canonicalForm = forms.get(0);
+            }
+        }
+        if (canonicalForm == null) {
+            logger.warn("No canonical form for " + this.getId());
+        }
+
     }
 
 }

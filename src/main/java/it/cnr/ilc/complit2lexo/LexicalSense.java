@@ -10,11 +10,29 @@ package it.cnr.ilc.complit2lexo;
  */
 public class LexicalSense extends Metadata{
     
-    String definition;
+    private String definition;
+    private String example;
+    private String comment;
     
-    //TODO
+        //TODO
     //List<Relation> relations;
     //Direct o Indirect
+
+    public String getExample() {
+        return example;
+    }
+
+    public void setExample(String example) {
+        this.example = example;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
     
     
     //isLexicalizedSenseOf //OBJprop => LexicalConcept

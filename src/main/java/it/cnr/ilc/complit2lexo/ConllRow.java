@@ -21,7 +21,7 @@ public class ConllRow {
 
     private static Logger logger = LoggerFactory.getLogger(Complit2LexO.class);
 
-    private String id; //0
+    private String id; //0 - provenance
     private String forma;//1
     private String lemma;//2
     private String pos;//3
@@ -87,7 +87,9 @@ public class ConllRow {
 
     public List<AbstractMiscUnit> getMiscUnits(String type) {
         if (type != null) {
-            return miscUnits.get(type);
+            if (miscUnits != null) {
+                return miscUnits.get(type);
+            }
         }
         return null;
     }
@@ -109,6 +111,32 @@ public class ConllRow {
         return traitsList;
     }
 
+    public String getTraitsAsString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < traitsList.size(); i++) {
+            Trait trait = traitsList.get(i);
+            sb.append(trait.getName()).append("_").append(trait.getValue());
+            if(i < traitsList.size() - 1) {
+                sb.append("-");
+            }
+        }
+
+        return sb.toString();
+    }
+    
+    public String getTraitsValueAsString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < traitsList.size(); i++) {
+            Trait trait = traitsList.get(i);
+            sb.append(trait.getValue());
+            if(i < traitsList.size() - 1) {
+                sb.append("-");
+            }
+        }
+
+        return sb.toString();
+    }
+    
     private void readMisc(String field) throws Exception {
         if (field != null) {
             if (!field.contains("_")) { //se MISC non e' vuoto
@@ -148,7 +176,7 @@ public class ConllRow {
     public ConllRow(String row) throws Exception {
         if (row != null) {
             String[] fields = row.split("\t");
-            this.setId(fields[0]);
+            this.setId(fields[0]); //provenance
             this.setForma(fields[1]);
             this.setLemma(fields[2]);
             this.setPos(fields[3]);
@@ -161,6 +189,23 @@ public class ConllRow {
             this.readMisc(fields[9]);
             calculateId();
         }
+    }
+
+    public String getLexicalEntryId() {
+        //l'id è la MUS se esiste oppure lemma+pos 
+        return getLemma() + "_" + getPos();
+    }
+
+    public String calculateKey() {
+        //l'id è la MUS se esiste oppure lemma+pos 
+        String lexicalEntryId = null;
+
+        if (getMusId() != null) {
+            lexicalEntryId = getMusId();
+        } else {
+            lexicalEntryId = getLemma() + "_" + getPos();
+        }
+        return lexicalEntryId;
     }
 
 }
