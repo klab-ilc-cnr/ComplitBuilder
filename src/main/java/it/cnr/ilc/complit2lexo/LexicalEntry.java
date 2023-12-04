@@ -36,7 +36,7 @@ public class LexicalEntry extends Metadata {
 
     private String pos; //es. "http://www.lexinfo.net/ontology/3.0/lexinfo#" + POS dal merge
     //Lemma
-
+    
     @ToString.Exclude
     private String author; //in fase di creazione coincide con il creatore
 

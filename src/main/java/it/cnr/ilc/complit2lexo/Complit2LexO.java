@@ -202,7 +202,7 @@ public class Complit2LexO {
                                 }
                                 id.append(cr.getForma());
                                 //Creo l'id della forma
-                                form.setId(id.append("_").append(le.getPos()).append("_").append(cr.getTraitsValueAsString()).toString());
+                                form.setId(id.append("_").append(le.getId()).append("_").append(le.getPos()).append("_").append(cr.getTraitsValueAsString()).toString());
                                 le.addForm(form);
                             } else {
                                 //la forma esiste già e i tratti sono compatibili => fondo i tratti (perché
