@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author Simone Marchi
  */
-public class Complit2LexO {
+public class ComplitBuilder {
 
-    private static Logger logger = LoggerFactory.getLogger(Complit2LexO.class);
+    private static Logger logger = LoggerFactory.getLogger(ComplitBuilder.class);
 
     public static void main(String[] args) throws Exception {
         //Per la stampa della configurazione di LogBack
@@ -73,9 +73,9 @@ public class Complit2LexO {
          * una lista di identificativi di USEM.
          */
         Lexicon lexicon = new Lexicon("compl_it", "it", "importer");
-        lexicon.addContributor("https://www.ilc.cnr.it/people/emiliano-giovannetti/");
         lexicon.addContributor("https://www.ilc.cnr.it/people/flavia-sciolette/");
         lexicon.addContributor("https://www.ilc.cnr.it/people/andrea-bellandi/");
+        lexicon.addContributor("https://www.ilc.cnr.it/people/emiliano-giovannetti/");
         lexicon.addContributor("https://www.ilc.cnr.it/people/simone-marchi/");
         lexicon.setDescription("The CompL-it lexicon");
 
@@ -105,11 +105,11 @@ public class Complit2LexO {
         //Creazione delle relazioni tra unità semantiche
         HashMap<String, List<SemRel>> listOfSematicRelations = createSemanticRelations(lexicon.getLexicalEntries(), semRelHM);
 
-        TTLSerializer.serialize(lexicon, listOfSematicRelations);
+        TTLSerializer.serialize(lexicon, listOfSematicRelations,"/home/simone/complit.ttl");
     }
 
     public static HashMap<String, String> readSematicRelationMapping(String filename) {
-        InputStream inputStream = Complit2LexO.class.getResourceAsStream("/mappingSemanticRelations.txt");
+        InputStream inputStream = ComplitBuilder.class.getResourceAsStream("/mappingSemanticRelations.txt");
 
         HashMap<String, String> prefixMapping = new HashMap<>();
         prefixMapping.put("lexinfo#", "lexinfo:");

@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -18,7 +17,13 @@ import java.util.regex.Pattern;
  * @author Simone Marchi
  */
 public class TTLSerializer {
-
+/**
+ * Lexicon in Turtle Format document:
+ * https://docs.google.com/document/d/1llr5fe9Eq4aFF9cqH_TBpdBrh8Xg8ZkqWFFME9Z2IEk/edit#bookmark=id.z34b7lrmoi4d
+ */
+    /**
+     * Characters to be escaped with backslashes
+     */
     private static Pattern escapedCharacters = Pattern.compile("([\"'’])");
 
     private final static String TTLPREFIXES
@@ -36,10 +41,11 @@ public class TTLSerializer {
               @prefix skos: <http://www.w3.org/2004/02/skos/core#> """;
 
     public static void serialize(Lexicon lexicon,
-            HashMap<String, List<SemRel>> sematicRelationsHM) throws IOException {
+            HashMap<String, List<SemRel>> sematicRelationsHM,
+            String outputFilename) throws IOException {
 
         if (lexicon != null) {
-            BufferedWriter writer = new BufferedWriter(new FileWriter("/home/simone/complit.ttl"));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilename));
 
             HashMap<String, HashMap<String, LexicalEntry>> lexicalEntries = lexicon.getLexicalEntries();
             if (lexicalEntries != null) {
@@ -166,7 +172,7 @@ public class TTLSerializer {
             sb.append(Utils.PLEX).append(escape(cf.getId())).append(" a ").append(Utils.OFORM).append(Utils.ENDROW);
             sb.append(metaDCT(cf, Utils.TAB));
             sb.append(traitsAsTurtle(cf.getTraits(), Utils.TAB));
-
+            sb.append(Utils.TAB).append(Utils.OWRITTEN_REP).append(" \"").append(cf.getWrittenRep()).append("\"@").append(le.getLanguage()).append(Utils.ENDROW);
             sb.delete(sb.lastIndexOf(";"), sb.length()).append(" .\n");
         }
 
@@ -191,7 +197,7 @@ public class TTLSerializer {
                         sb.append(Utils.PLEX).append(escape(form.getId())).append(" a ").append(Utils.OFORM).append(Utils.ENDROW);
                         sb.append(metaDCT(form, Utils.TAB));
                         sb.append(traitsAsTurtle(form.getTraits(), Utils.TAB));
-                        sb.append(Utils.OWRITTEN_REP).append(" \"").append(form.getWrittenRep()).append("\"@").append(le.getLanguage()).append(Utils.ENDROW);
+                        sb.append(Utils.TAB).append(Utils.OWRITTEN_REP).append(" \"").append(form.getWrittenRep()).append("\"@").append(le.getLanguage()).append(Utils.ENDROW);
                         sb.delete(sb.lastIndexOf(";"), sb.length()).append(" .\n");
                     }
                 }
@@ -220,9 +226,12 @@ public class TTLSerializer {
         return sb.toString();
     }
 
+    /**
+     * Escape special character @see escapedCharacters
+     * @param s
+     * @return 
+     */
     private static String escape(String s) {
-       // return s.replaceAll("\"","\\\\\"" ).replaceAll("'", "\'");
-       
         return escapedCharacters.matcher(s).replaceAll("\\\\$1");
     }
 
