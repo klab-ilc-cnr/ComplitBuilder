@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 @ToString
 public class ConllRow {
 
-    private static Logger logger = LoggerFactory.getLogger(Complit2LexO.class);
+    private static Logger logger = LoggerFactory.getLogger(ComplitBuilder.class);
 
     private String id; //0 - provenance
     private String forma;//1
