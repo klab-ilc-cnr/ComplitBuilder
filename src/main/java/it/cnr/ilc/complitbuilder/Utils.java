@@ -1,4 +1,4 @@
-package it.cnr.ilc.complit2lexo;
+package it.cnr.ilc.complitbuilder;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;

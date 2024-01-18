@@ -1,8 +1,6 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package it.cnr.ilc.complit2lexo;
+package it.cnr.ilc.complitbuilder;
 
 import lombok.ToString;
 
@@ -11,11 +9,12 @@ import lombok.ToString;
  * @author Simone Marchi
  */
 @ToString
-public class SyntacticUnit extends AbstractMiscUnit {
+public class MorphologicalUnit extends AbstractMiscUnit {
 
+    //idMus, naming, pos, ginp
     private String id;
 
-    public SyntacticUnit(String id) {
+    public MorphologicalUnit(String id) {
         this.id = id;
     }
 
@@ -28,8 +27,8 @@ public class SyntacticUnit extends AbstractMiscUnit {
     public boolean equals(Object obj) {
         boolean retVal = false;
 
-        if (obj instanceof SyntacticUnit) {
-            SyntacticUnit ptr = (SyntacticUnit) obj;
+        if (obj instanceof MorphologicalUnit) {
+            MorphologicalUnit ptr = (MorphologicalUnit) obj;
             retVal = ptr.id.equals(this.id);
         }
 
