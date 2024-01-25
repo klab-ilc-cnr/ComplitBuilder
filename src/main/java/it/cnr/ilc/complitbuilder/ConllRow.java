@@ -116,27 +116,27 @@ public class ConllRow {
         for (int i = 0; i < traitsList.size(); i++) {
             Trait trait = traitsList.get(i);
             sb.append(trait.getName()).append("_").append(trait.getValue());
-            if(i < traitsList.size() - 1) {
+            if (i < traitsList.size() - 1) {
                 sb.append("-");
             }
         }
 
         return sb.toString();
     }
-    
+
     public String getTraitsValueAsString() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < traitsList.size(); i++) {
             Trait trait = traitsList.get(i);
             sb.append(trait.getValue());
-            if(i < traitsList.size() - 1) {
+            if (i < traitsList.size() - 1) {
                 sb.append("-");
             }
         }
 
         return sb.toString();
     }
-    
+
     private void readMisc(String field) throws Exception {
         if (field != null) {
             if (!field.contains("_")) { //se MISC non e' vuoto
@@ -176,18 +176,22 @@ public class ConllRow {
     public ConllRow(String row) throws Exception {
         if (row != null) {
             String[] fields = row.split("\t");
-            this.setId(fields[0]); //provenance
-            this.setForma(fields[1]);
-            this.setLemma(fields[2]);
-            this.setPos(fields[3]);
-            try {
-                this.addTrais(fields[5]);
-            } catch (MalformedRowException e) {
-                logger.error("Error in row: {}", e.getLocalizedMessage());
-                throw new MalformedRowException(e);
+            if (fields != null && fields.length == 10) {
+                this.setId(fields[0]); //provenance
+                this.setForma(fields[1]);
+                this.setLemma(fields[2]);
+                this.setPos(fields[3]);
+                try {
+                    this.addTrais(fields[5]);
+                } catch (MalformedRowException e) {
+                    logger.error("Error in row: {}", e.getLocalizedMessage());
+                    throw new MalformedRowException(e);
+                }
+                this.readMisc(fields[9]);
+                calculateId();
+            } else {
+                System.err.println("Row doesn't have 10 fields: " + row);
             }
-            this.readMisc(fields[9]);
-            calculateId();
         }
     }
 
