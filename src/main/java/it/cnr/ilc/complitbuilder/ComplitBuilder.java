@@ -51,15 +51,20 @@ public class ComplitBuilder {
         // or even
         logger.info("Logback used '{}' as the configuration file.", mainURL);
          */
+
+ /* Test input file */
         //File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/test-importer.conll");
         //File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/abbagliare_v.conll");
         //File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/altoforno_n.conll");
         // File conllFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/merge.conll");
-
         //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/polacco_noun.conll");
         //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/distaccare.conll");
         //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/a.conll");
         //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/fails.conll");
+        //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/orfanoADJ.conll");
+        //File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/UD/sudorientale.conll");
+
+        /* Release input file */
         File firstConnlFile = new File("/home/simone/Nextcloud/PROGETTI/FormarioItalex/Lexico/lexico_lexinfo.conll");
         File secondConnlFile = new File("/home/simone/Nextcloud/PROGETTI/magic_src/formario_MAGIC.conll");
         File thirdConnlFile = new File("/home/simone/Nextcloud/PROGETTI/UD/UD_lexinfo.conll");
@@ -84,7 +89,7 @@ public class ComplitBuilder {
         lexicon.setLexicalEntries(lexicalEntries);
         processConll(lexicalEntries, firstConnlFile, "LexicO");
         System.err.println("Finished first file");
-        processConll(lexicalEntries, secondConnlFile, "MAGIC");
+        processConll(lexicalEntries, secondConnlFile, "M-GLF");
         System.err.println("Finished second file");
         processConll(lexicalEntries, thirdConnlFile, "TB");
         System.err.println("Finished third file");
@@ -105,7 +110,7 @@ public class ComplitBuilder {
         //Creazione delle relazioni tra unità semantiche
         HashMap<String, List<SemRel>> listOfSematicRelations = createSemanticRelations(lexicon.getLexicalEntries(), semRelHM);
 
-        TTLSerializer.serialize(lexicon, listOfSematicRelations,"/home/simone/complit.ttl");
+        TTLSerializer.serialize(lexicon, listOfSematicRelations, "/home/simone/complit.ttl");
     }
 
     public static HashMap<String, String> readSematicRelationMapping(String filename) {
@@ -209,6 +214,7 @@ public class ComplitBuilder {
                                 form.addTraits(cr.getTraitsList());
                                 form.addCreator(creator);
                             }
+                            le.addCreator(creator);//aggiungo il creator alla Lexical Entry (che se già presente non sarà aggiunto)
                             form.appendProvenance(cr.getId());
                         }
                         le.addLexicoUnits(cr.getMiscUnits());
