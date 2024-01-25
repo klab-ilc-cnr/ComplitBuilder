@@ -4,6 +4,7 @@
  */
 package it.cnr.ilc.complitbuilder;
 
+import java.util.ArrayList;
 import lombok.ToString;
 
 /**
@@ -18,7 +19,7 @@ public abstract class Metadata {
 
     private String created; //timestamp
 
-    private StringBuilder creator = new StringBuilder();
+    private ArrayList<String> creator = new ArrayList<>();
 
     private String modified; //timestamp
 
@@ -39,14 +40,13 @@ public abstract class Metadata {
     }
 
     public String getCreator() {
-        return creator.toString();
+        return String.join(";", creator);
     }
 
     public void addCreator(String creator) {
-        if(!this.creator.isEmpty()) {
-            this.creator.append(";");
+        if (!this.creator.contains(creator)) {
+            this.creator.add(creator);
         }
-        this.creator.append(creator);
     }
 
     public String getModified() {
