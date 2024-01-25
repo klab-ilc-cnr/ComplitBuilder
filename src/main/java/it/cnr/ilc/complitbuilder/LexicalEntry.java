@@ -36,7 +36,7 @@ public class LexicalEntry extends Metadata {
 
     private String pos; //es. "http://www.lexinfo.net/ontology/3.0/lexinfo#" + POS dal merge
     //Lemma
-    
+
     @ToString.Exclude
     private String author; //in fase di creazione coincide con il creatore
 
@@ -216,8 +216,8 @@ public class LexicalEntry extends Metadata {
                 .toString();
     }
 
-    private Form findGenderNumber(String gender, String number) {
-
+    private Form findFormByGenderNumber(String gender, String number) throws Exception {
+        Form selectedForm = null;
         if (forms != null) {
             for (Form form : forms) {
                 boolean genderFound = false;
@@ -228,17 +228,29 @@ public class LexicalEntry extends Metadata {
                     } else if (trait.getName().equals("number") && trait.getValue().equals(number)) {
                         numberFound = true;
                     }
-                    if (genderFound && numberFound) {
-                        return form;
+                }
+                if (genderFound && numberFound) {
+                    selectedForm = form;
+                    break;
+                } else if (selectedForm == null) {
+                    if (genderFound || numberFound) {
+                    selectedForm = form;
+                    } else if (form.getTraits() == null) {
+                        selectedForm = form;
+                        logger.error(String.format("Forma senza tratti! la uso come canonicalForm in mancanza di altro %s", selectedForm));
                     }
+                } else {
+                    //logger.error(String.format("selectedForm already present %s vs %s", selectedForm, form));
+                    //throw new Exception();
                 }
             }
 
         }
-        return null;
+
+        return selectedForm;
     }
 
-    private Form findInfinitive() {
+    private Form findFormByInfinitive() {
         if (forms != null) {
             for (Form form : forms) {
                 for (Trait trait : form.getTraits()) {
@@ -251,25 +263,24 @@ public class LexicalEntry extends Metadata {
         return null;
     }
 
-    public void calculateCanonicalForm() {
+    public void calculateCanonicalForm() throws Exception {
         //elezione della canonical form
         //se NOUN/ADJ => 1. maschile singolare, 2. femminile singolare, 3. maschile plurale, 4. femminile plurale
         //se VERB => 1. infinito (e se non fosse presente??? ne prendo uno a caso ad esempio la prima forma nella lista?)
-
         if (forms != null) {
             if ((pos.equals(Utils.NOUN) || pos.equals(Utils.ADJECTIVE))) {
-                canonicalForm = findGenderNumber(Utils.MASCULINE, Utils.SINGULAR);
+                canonicalForm = findFormByGenderNumber(Utils.MASCULINE, Utils.SINGULAR);
                 if (canonicalForm == null) {
-                    canonicalForm = findGenderNumber(Utils.FEMININE, Utils.SINGULAR);
+                    canonicalForm = findFormByGenderNumber(Utils.FEMININE, Utils.SINGULAR);
                 }
                 if (canonicalForm == null) {
-                    canonicalForm = findGenderNumber(Utils.MASCULINE, Utils.PLURAL);
+                    canonicalForm = findFormByGenderNumber(Utils.MASCULINE, Utils.PLURAL);
                 }
                 if (canonicalForm == null) {
-                    canonicalForm = findGenderNumber(Utils.FEMININE, Utils.PLURAL);
+                    canonicalForm = findFormByGenderNumber(Utils.FEMININE, Utils.PLURAL);
                 }
             } else if (pos.equals(Utils.VERB)) {
-                canonicalForm = findInfinitive();
+                canonicalForm = findFormByInfinitive();
             } else { //altre pos prendo la prima forma
                 canonicalForm = forms.get(0);
             }
