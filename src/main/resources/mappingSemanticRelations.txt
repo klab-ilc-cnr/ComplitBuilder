@@ -1,7 +1,7 @@
 R101	complit#	polysemyLocationHumanGroup
 R102	complit#	polysemyExperienceEventCauseExperienceEvent
 R103	complit#	polysemyOpeningArtifact
-R113	lexinfo#	partMeronimy
+R113	lexinfo#	partMeronym
 R114	complit#	indirectTelic
 R121	complit#	usedAs
 R123	complit#	polysemySubstanceColour
@@ -120,7 +120,7 @@ R65	complit#	isTheAbilityOf
 R66	complit#	isTheHabitOf
 R67	complit#	polysemyAgentOfPersistentActivityProfession
 R69	complit#	isAFollowerOf
-R71	lexinfo#	memberMeronimy
+R71	lexinfo#	memberMeronym
 R72	complit#	livesIn
 R73	complit#	polysemyPeopleLanguage
 R76	complit#	isTheActivityOf
