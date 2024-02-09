@@ -113,12 +113,12 @@ public class ComplitBuilder {
         TTLSerializer.serialize(lexicon, listOfSematicRelations, "/home/simone/complit.ttl");
     }
 
-    public static HashMap<String, String> readSematicRelationMapping(String filename) {
+    public static HashMap<String, String> readSematicRelationMapping(String filename) throws Exception {
         InputStream inputStream = ComplitBuilder.class.getResourceAsStream("/mappingSemanticRelations.txt");
 
         HashMap<String, String> prefixMapping = new HashMap<>();
         prefixMapping.put("lexinfo#", "lexinfo:");
-        prefixMapping.put("complit#", "compl-it:");
+        prefixMapping.put("compl-it#", "compl-it:");
 
         HashMap<String, String> ret = new HashMap();
         try (BufferedReader br
@@ -126,8 +126,12 @@ public class ComplitBuilder {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] row = line.split("\t");
-                String value = prefixMapping.get(row[1]) + row[2];
-                ret.put(row[0], value);
+                if (prefixMapping.containsKey(row[1])) {
+                    String value = prefixMapping.get(row[1]) + row[2];
+                    ret.put(row[0], value);
+                } else{
+                    throw new Exception("Key not found " + row[1]);
+                }
             }
         } catch (IOException ex) {
             System.err.format("Error reading file %s\n", filename);

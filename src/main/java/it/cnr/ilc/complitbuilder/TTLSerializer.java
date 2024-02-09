@@ -26,23 +26,9 @@ public class TTLSerializer {
      */
     private static Pattern escapedCharacters = Pattern.compile("([\"'’])");
 
-    private final static String TTLPREFIXES
-            = """
-              @prefix ontolex: <http://www.w3.org/ns/lemon/ontolex#> . 
-              @prefix lex: <http://lexica/mylexicon#> . 
-              @prefix lime: <http://www.w3.org/ns/lemon/lime#> . 
-              @prefix lexinfo: <http://www.lexinfo.net/ontology/3.0/lexinfo#> . 
-              @prefix dct: <http://purl.org/dc/terms/> . 
-              @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
-              @prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> . 
-              @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
-              @prefix owl: <http://www.w3.org/2002/07/owl#> . 
-              @prefix compl-it: <http://klab/lexicon/vocabulary/complit#> . 
-              @prefix skos: <http://www.w3.org/2004/02/skos/core#> """;
-
     public static void serialize(Lexicon lexicon,
             HashMap<String, List<SemRel>> sematicRelationsHM,
-            String outputFilename) throws IOException {
+            String outputFilename) throws IOException, Exception {
 
         if (lexicon != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilename));
@@ -52,7 +38,8 @@ public class TTLSerializer {
                 StringBuilder sb = new StringBuilder();
 
                 //Prefixes        
-                sb.append(TTLPREFIXES).append(" .\n");
+                sb.append(Utils.TTLPREFIXES).append(" .\n");
+                sb.append(Utils.COMPL_IT_DEF).append(" .\n");
                 sb.append(lexiconToTurtleString(lexicon));
                 for (String key : lexicalEntries.keySet()) {
                     HashMap<String, LexicalEntry> leHM = lexicalEntries.get(key);
@@ -98,7 +85,7 @@ public class TTLSerializer {
         sb.append(Utils.TAB).append(Utils.LLANG).append(" ").append("\"").append(lex.getLanguage()).append("\"").append(Utils.ENDROW);
         sb.append(Utils.TAB).append(Utils.DCTLANG).append(" ").append("\"").append(lex.getLanguage()).append("\"").append(Utils.ENDROW);
         sb.append(Utils.TAB).append(Utils.LLINGCAT).append(" ").append("<").append(Utils.LEXINFO_URL).append(">").append(Utils.ENDROW);
-        sb.append(Utils.TAB).append(Utils.LLINGCAT).append(" ").append("<").append(Utils.COMPLIT_URL).append(">").append(Utils.ENDROW);
+        //sb.append(Utils.TAB).append(Utils.LLINGCAT).append(" ").append("<").append(Utils.COMPLIT_URL).append(">").append(Utils.ENDROW);
         return sb.toString();
     }
 
