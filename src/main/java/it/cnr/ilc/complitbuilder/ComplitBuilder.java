@@ -211,7 +211,12 @@ public class ComplitBuilder {
                                 }
                                 id.append(cr.getForma());
                                 //Creo l'id della forma
-                                form.setId(id.append("_").append(le.getId()).append("_").append(le.getPos()).append("_").append(cr.getTraitsValueAsString()).toString());
+                                StringBuilder formId = id.append("_").append(le.getId()).append("_").append(le.getPos());
+                                if (!"".equals(cr.getTraitsValueAsString())) { //se non ci sono tratti evito di aggiungere _ in fondo alla stringa
+                                    formId.append("_").append(cr.getTraitsValueAsString());
+                                }
+                                form.setId(formId.toString());
+                                //form.setId(id.append("_").append(le.getId()).append("_").append(le.getPos()).append("_").append(cr.getTraitsValueAsString()).toString());
                                 le.addForm(form);
                             } else {
                                 //la forma esiste già e i tratti sono compatibili => fondo i tratti (perché

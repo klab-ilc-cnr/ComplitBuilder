@@ -178,7 +178,8 @@ public class ConllRow {
             String[] fields = row.split("\t");
             if (fields != null && fields.length == 10) {
                 this.setId(fields[0]); //provenance
-                this.setForma(fields[1]);
+                
+                this.setForma(!"_".equals(fields[1])?fields[1]:fields[2]); //nel caso di entrate introdotte da Thamus e che non hanno nessuna forma associata
                 this.setLemma(fields[2]);
                 this.setPos(fields[3]);
                 try {
